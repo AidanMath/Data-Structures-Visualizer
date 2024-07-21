@@ -1,6 +1,7 @@
 import random
 
 class Array:
+    #Methods to implement: Insert, Delete, getData, 
 
     def __init__(self, capacity=None):
         if capacity:
@@ -103,6 +104,8 @@ class Array:
             left+=1
             right-=1
             self.display()
+    
+
         
         
     
@@ -118,10 +121,10 @@ class Array:
 
 Array2 = Array.generate_array(10)
 
-print(Array2)
+
 #Array2.bubble_sort()
 #Array2.rotate_array_right(3)
 #Array2.rotate_array_left(3)
 Array2.reverse_Array()
-print(Array2)
+
 
