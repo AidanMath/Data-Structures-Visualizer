@@ -72,6 +72,7 @@ class DataStructureVisualizer:
         self.data_structure_label.config(bg=theme["bg"], fg=theme["fg"])
         self.background_toggler.config(bg=theme["button"], fg=theme["fg"], activebackground=theme["accent"])
         
+        # Changes styling 
         self.dropdown.config(
             bg=theme["button"],
             fg=theme["fg"],

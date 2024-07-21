@@ -16,5 +16,7 @@ class Node:
     def set_data(self, data):
         self.data=data
 
+    def toString(self):
+        return print(str(self.data))
 
     
