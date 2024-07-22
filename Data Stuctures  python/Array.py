@@ -1,4 +1,5 @@
 import random
+import inspect
 
 class Array:
     #Methods to implement: Insert, Delete, getData, 
@@ -72,9 +73,9 @@ class Array:
         for i in range(self.length):
             new_index = (i + shift_amount) % self.length
             arr.array[new_index] = self.array[i]
+            
             print("rotated right")
             arr.display()
-        
         self.array = arr.array 
         
         return self.array

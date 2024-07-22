@@ -1,0 +1,8 @@
+{
+    "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort"],
+    "Array": ["Add", "Delete", "Insert", "Reverse", "Sort", "Binary Search"],
+    "Queue": ["Add","Delete", "Insert", "Reverse", "Sort", "Search", "Promote"],
+    "Stack": ["Enqueue", "Dequeue", "Insert", "Peek","Reverse", "Sort"],
+    "HashTable": ["Add", "Delete", "etc..."],
+    "BinaryTree": ["Inorder Traversal", "Preorder Traversal", "Other traversal", "etc..."]
+}

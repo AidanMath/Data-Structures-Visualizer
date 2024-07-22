@@ -1,5 +1,6 @@
 from Node import Node
 import random 
+import inspect
 
 class LinkedList:
     def __init__(self):
@@ -100,12 +101,9 @@ class LinkedList:
         current=self.head
         prev=None
         next=None
-
         #loops throught the list, 
         #finds next node, set pcurrent node.next to prev
         #iterates
-
-        
         while current!=None:
             next=current.next
             current.next=prev
@@ -114,32 +112,28 @@ class LinkedList:
 
         #repoints head
         self.head=prev
-    #def LL_sort():
-        
-      
-    
-        
 
+    def sort(self):
+        if self.head is None or self.head.next is None:
+            return 
+        current=self.head
+        while current:
+            
+            runner=current.next
+            
 
-        
+            while runner:
+                if(current.data > runner.data):
+                    temp = current.data
+                    current.data=runner.data
+                    runner.data=temp
+                runner=runner.next
+            current=current.next  
+
 
             
 
-
-
-
-        
-        
-        
-
-
-        
-        
-        
-
-
-
-
+                            
 # Tests 
 LinkedList1 = LinkedList()
 
@@ -151,9 +145,13 @@ LinkedList1.add(2)
 LinkedList1.add(8)
 Random_List= LinkedList.LL_generator(10)
 
+
 print(Random_List.toString())
 #Random_List.LL_insert(3, 9)
-Random_List.LL_reverse()
+#Random_List.LL_reverse()
+
+
+Random_List.sort()
 print(Random_List.toString())
 
 
