@@ -2,6 +2,8 @@ from Node import Node
 import random 
 import inspect
 
+# need to add a view Linked List Method, that simply displays current status of a linked list 
+
 class LinkedList:
     def __init__(self):
 
@@ -135,27 +137,28 @@ class LinkedList:
 
                             
 # Tests 
-LinkedList1 = LinkedList()
+# LinkedList1 = LinkedList()
 
-LinkedList1.add(1)
+# LinkedList1.add(1)
 
-LinkedList1.add(18)
+# LinkedList1.add(18)
 
-LinkedList1.add(2)
-LinkedList1.add(8)
-Random_List= LinkedList.LL_generator(10)
-
-
-print(Random_List.toString())
-#Random_List.LL_insert(3, 9)
-#Random_List.LL_reverse()
+# LinkedList1.add(2)
+# LinkedList1.add(8)
+# Random_List= LinkedList.LL_generator(10)
 
 
-Random_List.sort()
-print(Random_List.toString())
+# print(Random_List.toString())
+# Random_List.LL_insert(3, 9)
+# Random_List.LL_reverse()
+
+
+# Random_List.sort()
+# print(Random_List.length)
+# print(Random_List.toString())
 
 
 
 
-#LinkedList1.delete(4)
-#print(LinkedList1.toString())
+# LinkedList1.delete(4)
+# print(LinkedList1.toString())
