@@ -17,7 +17,7 @@ class ArrayVisualizer:
         for i, value in enumerate(array):
             x = self.start_x + i * self.cell_size
             y = self.start_y
-            color = "blue" if i == highlight_index else "white"
+            color = "lightblue" if i == highlight_index else "white"
             self.draw_cell(x, y, value, color)
 
     def draw_cell(self, x, y, data, color="white"):
