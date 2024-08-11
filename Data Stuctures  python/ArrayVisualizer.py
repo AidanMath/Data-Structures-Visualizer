@@ -1,30 +1,6 @@
 import Array
 import time
-class ArrayVisualizer:
-    def __init__(self, canvas):
-        self.canvas=canvas
-        self.length=20
-        self.width=20
-        self.start_x = 50
-        self.start_y = 100
-        self.animation_speed = 500  # milliseconds
-        self.current_cell = None
-    def draw_array(self, array):
-        self.canvas.delete("all")
-        count=0
-        while count<= array.length:
-            self.draw_cell(array[count])
-
-    def draw_cell(self, x, y, data, color="white"):
-        cell_size = 40  
-        half_size = cell_size // 2
-        
-        self.canvas.create_rectangle(self.start_x - half_size, self.start_y - half_size,
-                                    self.start_x + half_size, self.start_y + half_size,
-                                    fill=color, outline="black")
-        self.canvas.create_text(x, y, text=str(data))
-        self.x+=cell_size
-
+import main
 import tkinter as tk
 import time
 
@@ -49,7 +25,7 @@ class ArrayVisualizer:
         self.canvas.create_rectangle(x - half_size, y - half_size, x + half_size, y + half_size, fill=color, outline="black")
         self.canvas.create_text(x, y, text=str(data))
 
-    def animate_add(self, array, data):
+    def animate_add(self, app, array, data):
         count = 0
 
         def step(count):
@@ -57,13 +33,15 @@ class ArrayVisualizer:
                 if array[count] is None:
                     array[count] = data
                     self.draw_array(array, highlight_index=count)
-                    self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Added {data} at index {count}", anchor="w")
+                    app.add_log(f"Added {data} at index {count}. O(n) operation time")
+                    self.canvas.create_text(500, self.start_y-100, text="Added Data")
+                    
                 else:
                     self.draw_array(array, highlight_index=count)
                     self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Checking index {count}", anchor="w")
                     self.canvas.after(self.animation_speed, lambda: step(count + 1))
             else:
-                self.canvas.create_text(self.start_x + 200, self.start_y - 50, text="Array is full, resizing...", anchor="w")
+                app.add_log("Array is full, resizing...")
                 self.canvas.after(self.animation_speed, resize)
 
         def resize():
@@ -73,17 +51,16 @@ class ArrayVisualizer:
                 new_array[i] = value
             array.extend([None] * (new_size - len(array)))
             self.draw_array(array)
-            self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Resized array to {new_size}", anchor="w")
             self.canvas.after(self.animation_speed, lambda: step(len(array) // 2))
 
         step(count)
 
 
-    def animate_delete(self, array, data, index=None):
+    def animate_delete(self, app, array, data, index=None):
         if index is None:
             def step(count):
                 if count >= len(array):
-                    self.canvas.create_text(self.start_x, self.start_y, text="Data not present within array")
+                    app.add_log(f"Looped through whole array and data was not present")
                     return
 
                 self.draw_array(array, highlight_index=count)
@@ -92,15 +69,15 @@ class ArrayVisualizer:
                 if array[count] == data:
                     # Highlight the node to be deleted
                     self.draw_array(array, highlight_index=count)
-                    self.canvas.create_text(self.start_x+150, self.start_y-50, text="Found data. Deleting...")
-                    self.canvas.update()  # Force update the canvas
+                    app.add_log(f"Found Data at index: {count}, deleting now O(n) operation")
+                
+                    self.canvas.update()  # Force update the canvas 
                     
                     # Pause to show the highlighted node before deletion
                     time.sleep(self.animation_speed / 1000)  # Convert milliseconds to seconds
                     
                     del array[count]
                     self.draw_array(array)
-                    self.canvas.create_text(self.start_x, self.start_y-50, text="Deleted from array")
                     self.canvas.update()  # Force update the canvas
                 else:
                     self.canvas.create_text(self.start_x, self.start_y - 50, text="Checking index", anchor="w")
@@ -111,12 +88,17 @@ class ArrayVisualizer:
             step(0)
      
         else:
+            index= int(index)
             if 0 <= index < len(array):
+                self.draw_array(array, highlight_index=index)
+                self.canvas.update()
+                app.add_log(f"Found Data at {index}, Deleting O(1) operation")
+                time.sleep(self.animation_speed / 1000) 
                 del array[index]
                 self.draw_array(array, highlight_index=None)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text="Removed from the array O(1) operation")
+                self.canvas.update()
             else:
-                self.canvas.create_text(self.start_x, self.start_y - 50, text="Invalid index")
+                app.add_log(f"Invalid Index, please try Again")
 
 
                     
