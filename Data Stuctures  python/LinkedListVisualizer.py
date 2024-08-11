@@ -22,11 +22,11 @@ class LinkedListVisualizer:
             if current == highlight_node:
                 color = "lightblue"
             elif current == highlight_prev:
-                color = "yellow"
+                color = "pink"
             elif current == highlight_next:
                 color = "lightgreen"
             
-            self.draw_node(x, y, current.data, color)
+            self.draw_node(x, y, self.toString(current.data), color)
             self.draw_length(linked_list)
             
             if current.next:
@@ -46,7 +46,7 @@ class LinkedListVisualizer:
         self.canvas.create_oval(x - self.node_radius, y - self.node_radius,
                                 x + self.node_radius, y + self.node_radius,
                                 fill=color, outline="black")
-        self.canvas.create_text(x, y, text=str(data))
+        self.canvas.create_text(x, y, text=self.toString(data))
 
     def draw_arrow(self, x1, y1, x2, y2, color="black"):
         self.canvas.create_line(x1 + self.node_radius, y1,
@@ -122,24 +122,33 @@ class LinkedListVisualizer:
         step(None, linked_list.head)
 
     def animate_reverse(self, linked_list):
-        def reverse_step(prev, current, remaining):
-            if not current:
-                linked_list.head = prev
+        def reverse_step(nodes, prev_index, current_index):
+            if current_index >= len(nodes):
+                linked_list.head = nodes[prev_index]
                 self.draw_list(linked_list)
                 self.canvas.create_text(self.start_x, self.start_y - 50, text="Reversed", anchor="w")
                 return
 
+            current = nodes[current_index]
+            prev = nodes[prev_index] if prev_index >= 0 else None
+            next_index = current_index + 1
+            next_node = nodes[next_index] if next_index < len(nodes) else None
+
             # Create a temporary list to visualize the current state
-            temp_list = self.create_temp_list(linked_list, prev, current, remaining)
+            temp_list = self.create_temp_list(nodes, prev_index, current_index)
             
             # Visualize current step
-            self.draw_list(temp_list, highlight_node=current, highlight_prev=prev, highlight_next=current.next)
+            self.draw_list(temp_list, highlight_node=current, highlight_prev=prev, highlight_next=next_node)
             self.canvas.create_text(self.start_x, self.start_y - 50, text="Reversing", anchor="w")
             
+            # Reverse the connection
+            if prev_index >= 0:
+                nodes[current_index].next = nodes[prev_index]
+            else:
+                nodes[current_index].next = None
+
             # Schedule the next step
-            next_node = current.next
-            current.next = prev
-            self.canvas.after(self.animation_speed, lambda: reverse_step(current, next_node, remaining[1:] if remaining else []))
+            self.canvas.after(self.animation_speed, lambda: reverse_step(nodes, current_index, next_index))
 
         # Convert the linked list to a list of nodes for easier manipulation
         nodes = []
@@ -149,29 +158,47 @@ class LinkedListVisualizer:
             current = current.next
 
         if nodes:
-            reverse_step(None, nodes[0], nodes[1:])
+            reverse_step(nodes, -1, 0)
         else:
             self.draw_list(linked_list)
             self.canvas.create_text(self.start_x, self.start_y - 50, text="List is empty", anchor="w")
 
-    def create_temp_list(self, original_list, prev, current, remaining):
+    def create_temp_list(self, nodes, prev_index, current_index):
         temp_list = LinkedList.LinkedList()
         
-        # Add reversed part
-        node = prev
-        while node:
-            temp_list.add(node.data)
-            node = node.next
+        for i, node in enumerate(nodes):
+            # Use original data without conversion
+            new_node = Node.Node(node.data)
+            
+            if i == 0:
+                temp_list.head = new_node
+            else:
+                # Add nodes to temp_list (ignoring prev_index and current_index for now)
+                temp_list.add(new_node)
+            
+            # Set next pointer for the new nodes
+            if i > 0:
+                prev_node.next = new_node
+            
+            # Save reference to the current node for setting next pointer
+            prev_node = new_node
         
-        # Add current node
-        temp_list.add(current.data)
-        
-        # Add remaining nodes
-        for node in remaining:
-            temp_list.add(node.data)
-        
+        # Manually set next pointer for the last node
+        if prev_node:
+            prev_node.next = None
+
+        # Set next pointers based on reversed order
+        for i in range(len(nodes)):
+            if i < current_index:
+                temp_list.head = nodes[current_index] if current_index >= 0 else None
+            elif i == current_index:
+                nodes[current_index].next = nodes[prev_index] if prev_index >= 0 else None
+            else:
+                nodes[i].next = nodes[i+1] if i+1 < len(nodes) else None
+
         return temp_list
-        
+
+            
 
     def animate_sort(self, linked_list):
 
@@ -216,7 +243,6 @@ class LinkedListVisualizer:
                     current = current.next
                 
                 linked_list.length += 1
-                print(linked_list.length)
                 self.draw_list(linked_list, highlight_node=current)
                 self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Generated node {count + 1}", anchor="w")
                 self.canvas.create_text(1920/3, 50, text=f"Generating a random list of Length {length}")
@@ -254,7 +280,8 @@ class LinkedListVisualizer:
         else:
             step(0, linkedlist.head, None)
 
-
+    def toString(self, data):
+        return str(data)
             
 
             

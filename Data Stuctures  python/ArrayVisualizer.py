@@ -19,11 +19,13 @@ class ArrayVisualizer:
             y = self.start_y
             color = "lightblue" if i == highlight_index else "white"
             self.draw_cell(x, y, value, color)
+        
 
     def draw_cell(self, x, y, data, color="white"):
         half_size = self.cell_size // 2
         self.canvas.create_rectangle(x - half_size, y - half_size, x + half_size, y + half_size, fill=color, outline="black")
         self.canvas.create_text(x, y, text=str(data))
+
 
     def animate_add(self, app, array, data):
         count = 0
@@ -34,7 +36,7 @@ class ArrayVisualizer:
                     array[count] = data
                     self.draw_array(array, highlight_index=count)
                     app.add_log(f"Added {data} at index {count}. O(n) operation time")
-                    self.canvas.create_text(500, self.start_y-100, text="Added Data")
+                    self.canvas.create_text(500, self.start_y-50, text="Added Data")
                     
                 else:
                     self.draw_array(array, highlight_index=count)
