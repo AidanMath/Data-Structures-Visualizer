@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import random
-import LinkedListVisualizer, LinkedList, Array, HashTable, Queue, Stack, BinaryTree
+import LinkedListVisualizer, LinkedList, ArrayVisualizer, HashTable, Queue, Stack, BinaryTree
 import ast
 
 class DataStructureVisualizer:
@@ -57,7 +57,7 @@ class DataStructureVisualizer:
         self.data_structure_label.pack(pady=(0, 10), padx=20)
 
         self.display_to_key = {
-            "Arrays": "Array",
+            "Array": "Array",
             "Binary Tree": "BinaryTree",
             "Linked List": "LinkedList",
             "Stack": "Stack",
@@ -80,8 +80,8 @@ class DataStructureVisualizer:
 
         self.method = tk.StringVar()
         self.methods = {
-            "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "View", "Generate"],
-            "Array": ["Add", "Delete", "Insert", "Reverse", "Sort", "Binary Search", "View"],
+            "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort",  "Generate"],
+            "Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "View"],
             "Queue": ["Add","Delete", "Insert", "Reverse", "Sort", "Search", "Promote", "View"],
             "Stack": ["Enqueue", "Dequeue", "Insert", "Peek","Reverse", "Sort", "View"],
             "HashTable": ["Add", "Delete", "etc...", "View"],
@@ -99,13 +99,17 @@ class DataStructureVisualizer:
         # Create confirm button
         self.confirm = tk.Button(self.left_frame, text="Confirm", font=("Arial", 12), command=self.execute_method)
         self.confirm.pack(pady=(0, 20), padx=20)
-
-        if self.option.get() =="Linked List":
-            
-
+        
+      
         # Initialize LinkedList and its visualizer
-            self.linked_list = LinkedList.LinkedList()
-            self.ll_visualizer = LinkedListVisualizer.LinkedListVisualizer(self.canvas)
+        self.linked_list = LinkedList.LinkedList()
+        self.ll_visualizer = LinkedListVisualizer.LinkedListVisualizer(self.canvas)
+     
+        self.array = [None, None, None, None]
+        self.array_visualizer = ArrayVisualizer.ArrayVisualizer(self.canvas)
+        if self.option.get()==None:
+            self.canvas.delete("all")
+ 
 
         self.apply_theme()
 
@@ -114,32 +118,36 @@ class DataStructureVisualizer:
 
     def display_node_info(self):
     # First, remove existing widgets if they exist
-        for widget in ['node_info_label', 'node_info_entry', 'index_label', 'index_entry']:
+        for widget in ['data_info_label', 'data_info_entry', 'index_label', 'index_entry']:
             if hasattr(self, widget):
                 getattr(self, widget).pack_forget()
         
-        if self.method.get() in ["Add", "Insert", "Delete", "Generate"]:
+        if self.method.get() in ["Add", "Insert", "Delete", "Generate", "Delete(Index)"]:
             if self.method.get() == "Generate":
                 label_text = "Enter length:"
             else:
-                label_text = "Enter node info:"
-            if self.method.get() == "Insert":
+                label_text = "Enter Data:"
+            if self.method.get() == "Insert" or self.method.get() == "Delete(Index)":
                 self.index_label = tk.Label(self.left_frame, text="Enter Index:", font=("Times New Roman", 14))
                 self.index_label.pack(pady=(10, 5), padx=20)
                 self.index_entry = tk.Entry(self.left_frame, font=("Times New Roman", 12))
                 self.index_entry.pack(pady=(0, 10), padx=20)
              
 
-            self.node_info_label = tk.Label(self.left_frame, text=label_text, font=("Times New Roman", 14))
-            self.node_info_label.pack(pady=(10, 5), padx=20)
+            self.data_info_label = tk.Label(self.left_frame, text=label_text, font=("Times New Roman", 14))
+            self.data_info_label.pack(pady=(10, 5), padx=20)
 
-            self.node_info_entry = tk.Entry(self.left_frame, font=("Times New Roman", 12))
-            self.node_info_entry.pack(pady=(0, 10), padx=20)
+            self.data_info_entry = tk.Entry(self.left_frame, font=("Times New Roman", 12))
+            self.data_info_entry.pack(pady=(0, 10), padx=20)
             if hasattr(self, 'confirm'):
                 self.confirm.pack_forget()
                 self.confirm = tk.Button(self.left_frame, text="Confirm", font=("Arial", 12), command=self.execute_method)
                 self.confirm.pack(pady=(10, 20), padx=20)
-            
+        elif self.method.get() == 'Reverse' or self.method.get() == 'Sort':
+            if hasattr(self, 'confirm'):
+                self.confirm.pack_forget()
+                self.confirm = tk.Button(self.left_frame, text="Confirm", font=("Arial", 12), command=self.execute_method)
+                self.confirm.pack(pady=(10, 20), padx=20)
         else:
             self.confirm.pack_forget()
             pass
@@ -153,19 +161,24 @@ class DataStructureVisualizer:
     
         if selected_structure == "LinkedList":
             if selected_method == "Add":
-                data = self.node_info_entry.get()
+                data = self.data_info_entry.get()
                 self.ll_visualizer.animate_add(self.linked_list, data)
             elif selected_method == "Delete":
                 if self.linked_list.head:
-                    data = self.node_info_entry.get()
+                    data = self.data_info_entry.get()
                     self.ll_visualizer.animate_delete(self.linked_list, data)
 
             elif selected_method == "Insert":
-                if self.linked_list.length <= 0 or self.linked_list.length<self.index_entry.get():
-                    print("Out of range")
+                print(self.linked_list.length)
+                if self.linked_list.length<int(self.index_entry.get()):
+
+                    self.canvas.create_text(1920/2, 50, text= "Out of Bounds")
+                    self.canvas.delete("Out of Bounds")
                 else:
-                    data = self.node_info_entry.get()
-                    self.ll_visualizer.animate_insert(self.linked_list, self.index_entry.get(), data)
+                    data = self.data_info_entry.get()
+                    index = self.index_entry.get()
+                    self.ll_visualizer.animate_insert(self.linked_list, int(index), int(data))
+
             elif selected_method == "Reverse":
                 self.ll_visualizer.animate_reverse(self.linked_list)
             elif selected_method == "Sort":
@@ -173,11 +186,17 @@ class DataStructureVisualizer:
             elif selected_method == "View":
                 self.ll_visualizer.draw_list(self.linked_list)  # Add this line
             elif selected_method == "Generate":
-                self.length = self.node_info_entry.get()
+                self.length = self.data_info_entry.get()
                 self.ll_visualizer.animate_generate_random_list(self.linked_list, self.length)
-        else:
-            # Placeholder for other data structures
-            print(f"Executing {selected_method} on {selected_structure}")
+
+        elif selected_structure == "Array":
+            if selected_method == "Add":
+                self.data= self.data_info_entry.get()
+                self.array_visualizer.animate_add(self.array, self.data)
+            if selected_method == "Delete":
+                    self.data= self.data_info_entry.get()
+                    self.array_visualizer.animate_delete(self.array, self.data)
+
         
 
     def theme_switch(self):
@@ -187,7 +206,7 @@ class DataStructureVisualizer:
     def update_methods(self, selected_display_option):
         selected_key = self.display_to_key[selected_display_option]
         methods = self.methods.get(selected_key, [])
-        print(f"Methods for {selected_display_option} ({selected_key}):", methods)
+       
 
         self.method_menu['values'] = methods
         
