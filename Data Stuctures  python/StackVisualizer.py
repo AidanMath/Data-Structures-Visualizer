@@ -1,0 +1,221 @@
+import Stack
+import Node
+import random
+class StackVisualizer:
+    def __init__(self, canvas, stack):
+        self.canvas = canvas
+        self.stack_width = 80
+        self.stack_height = 40
+        self.animation_speed = 500
+        self.stack=stack
+
+    def clear_message(self):
+        self.canvas.delete("message")
+
+    def show_message(self, text):
+        self.clear_message()
+        x_center = self.canvas.winfo_width() // 2  # Center the text horizontally
+        self.canvas.create_text(
+            x_center, self.stack_height + 20,
+            text=text,
+            anchor="center", 
+            tags="message"
+        )
+
+    def draw_stack(self, highlight_node=None, second_stack=None):
+        self.canvas.delete("all")
+        x_center = self.canvas.winfo_width() // 2 
+        if self.stack.is_empty() and (second_stack is None or second_stack.is_empty()):
+            self.show_message("Length of Stack is 0")
+            return
+        if second_stack:
+            temp = Stack.Stack()
+            temp2 = Stack.Stack()
+            y_position = 462  # Start drawing from the top
+
+            while not self.stack.is_empty():
+                current = self.stack.top
+                self.stack.top = current.next
+                current.next = temp.top
+                temp.top = current
+
+            while not second_stack.is_empty():
+                current = second_stack.top
+                second_stack.top = current.next
+                current.next = temp2.top
+                temp2.top = current
+            
+            while not temp.is_empty():
+                current = temp.top
+                temp.top = current.next
+
+                color = "lightblue" if current == highlight_node else "white"
+                self.draw_cell(current.data, x_center-100, y_position, color)
+                y_position -= self.stack_height
+                current.next = self.stack.top
+                self.stack.top = current
+
+            y_position = 462  # Reset y_position for the second stack
+            while not temp2.is_empty():
+                current = temp2.top
+                temp2.top = current.next
+
+                color = "lightblue" if current == highlight_node else "white"
+                self.draw_cell(current.data, x_center + 100, y_position, color)
+                y_position -= self.stack_height
+                current.next = second_stack.top
+                second_stack.top = current
+            
+        else:
+            temp_stack = Stack.Stack()
+            y_position = 462  # Start drawing from the top
+
+            # Reverse the stack to draw it from top to bottom
+            while not self.stack.is_empty():
+                current = self.stack.top
+                self.stack.top = current.next
+                current.next = temp_stack.top
+                temp_stack.top = current
+
+            # Draw the stack from the temporary stack
+            while not temp_stack.is_empty():
+                current = temp_stack.top
+                temp_stack.top = current.next
+                color = "lightblue" if current == highlight_node else "white"
+                self.draw_cell(current.data, x_center, y_position, color)
+                y_position -= self.stack_height
+
+                # Restore the original stack order
+                current.next = self.stack.top
+                self.stack.top = current
+
+    def draw_cell(self, data, x_center, y_position, color):
+         # Center of the canvas for horizontal alignment
+        
+        self.canvas.create_rectangle(
+            x_center - self.stack_width // 2, y_position,
+            x_center + self.stack_width // 2, y_position + self.stack_height,
+            fill=color
+        )
+
+        self.canvas.create_text(
+            x_center, y_position + self.stack_height // 2,  # Center the text in the middle of the rectangle
+            text=str(data),
+            fill="black"
+        )
+
+    def animate_push(self, app,  data):
+        new_node = Node.Node(data)
+
+        
+        def step():
+            self.draw_stack(self.stack)
+            self.show_message(f"Pushing...")
+            self.canvas.after(self.animation_speed, add_Node)
+            self.draw_stack(self.stack)
+
+        def add_Node():
+            # Push operation directly on the stack passed
+            new_node.next = self.stack.top
+            self.stack.top = new_node
+            self.draw_stack(highlight_node=self.stack.top)  # Highlight the top of the stack
+            app.add_log(f"Pushed {data} onto the stack. Stack size: {len(self.stack)}, O(1) operation.")
+            self.show_message("Pushed Data")
+            self.stack.size += 1
+        step()
+        
+
+
+    def animate_pop(self, app):
+        def step():
+            self.draw_stack(highlight_node=self.stack.top)
+            app.add_log(f"Removing Stack.top: {self.stack.top.data if self.stack.top else 'None'}, O(1) operation.")
+            self.show_message("Popping top element")
+            self.canvas.after(self.animation_speed, remove)
+
+        def remove():
+            if self.stack.is_empty():
+                self.show_message("Stack is empty, cannot pop")
+                return
+            
+            current = self.stack.top
+            self.stack.top = current.next
+            self.show_message(f"Removed:{current.data} from the top of the Stack")
+
+            self.stack.size -= 1
+            app.add_log(f"Removed {current.data} from the top of the stack, O(1), length: {self.stack.size}")
+            self.draw_stack()
+
+        step()
+
+    def animate_peek(self, app):
+
+        def step():
+            self.draw_stack()
+            self.show_message("Peeking...")
+            self.canvas.after(self.animation_speed, peek)
+        def peek():
+            self.draw_stack(highlight_node=self.stack.top)
+            app.add_log(f"Top of the Stack: {self.stack.top.data}")
+            self.show_message(f"Top of the Stack is {self.stack.top.data}")
+        step()
+    
+    def animate_reverse(self, app):
+        self.show_message("Starting reverse...")
+        temp = Stack.Stack()
+    
+        def step():
+            nonlocal  temp
+            if self.stack.is_empty():
+                app.add_log("Finished")
+                self.show_message("Finished")
+               
+                self.stack, temp = temp, self.stack
+                self.draw_stack()
+                return
+
+            self.draw_stack(highlight_node=self.stack.top, second_stack=temp)
+            self.canvas.after(self.animation_speed, transfer)
+
+        def transfer():
+            app.add_log("Reversing...")
+            if not self.stack.is_empty():
+                current = self.stack.top
+                self.stack.top = self.stack.top.next
+                current.next = temp.top
+                temp.top = current
+                temp.size+=1
+                self.draw_stack(highlight_node=temp.top, second_stack=temp)
+                self.canvas.after(self.animation_speed, step())
+            else:
+                step()
+
+        step()
+
+    def animate_generate(self, app, length):
+        count=0
+        self.stack.top=None
+        def step(count):
+            if count == length:
+                self.draw_stack(highlight_node=self.stack.top)
+                app.add_log(f"Genrated Stack of length: {self.stack.length}")
+            else:
+                current= Node.Node(random.randint(1,100))
+                if self.stack.top is None:
+                    self.stack.top=current
+                else:
+                    current.next=self.top.next
+                    self.top=current
+                    self.draw_stack(highlight_node=self.stack.top)
+                    self.canvas.after(self.animation_speed, lambda: step(count+1))
+        step(0)
+
+
+
+
+            
+            
+
+
+
+

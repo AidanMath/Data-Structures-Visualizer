@@ -1,7 +1,7 @@
 import Node
 import random
 import tkinter as tk
-import LinkedList
+import LinkedList, Array, Stack
 class LinkedListVisualizer:
     def __init__(self, canvas):
         self.canvas = canvas
@@ -11,6 +11,12 @@ class LinkedListVisualizer:
         self.start_y = 100
         self.animation_speed = 500  # milliseconds
 
+    def clear_message(self):
+        self.canvas.delete("message")
+
+    def show_message(self, text):
+        self.clear_message()
+        self.canvas.create_text(self.start_x, self.start_y - 50, text=text, anchor="w", tags="message")
 
     def draw_list(self, linked_list, highlight_node=None, highlight_prev=None, highlight_next=None):
         self.canvas.delete("all")
@@ -27,7 +33,6 @@ class LinkedListVisualizer:
                 color = "lightgreen"
             
             self.draw_node(x, y, self.toString(current.data), color)
-            self.draw_length(linked_list)
             
             if current.next:
                 arrow_color = "red" if (current == highlight_node or current == highlight_prev) else "black"
@@ -35,12 +40,6 @@ class LinkedListVisualizer:
 
             x += self.spacing
             current = current.next
-        
-
-    def draw_length(self, linked_list):
-        x=1920/2
-        y=1000
-        self.canvas.create_text(x, y, text=f"{linked_list.length}" )
 
     def draw_node(self, x, y, data, color="white"):
         self.canvas.create_oval(x - self.node_radius, y - self.node_radius,
@@ -53,52 +52,51 @@ class LinkedListVisualizer:
                                 x2 - self.node_radius, y2,
                                 arrow=tk.LAST, fill=color)
 
-    def animate_add(self, linked_list, data):
-        
+    def animate_add(self, app, linked_list, data):
+        new_node = Node.Node(data)  # Create the new node outside the step function
 
         def step(node):
+            # If the linked list is empty, add the new node as the head
             if node is None:
-                linked_list.add(data)
-                self.draw_list(linked_list, linked_list.head)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Added node as linkedlist.head", anchor="w")
+                linked_list.head = new_node
                 linked_list.length += 1
-            elif linked_list.head.next is None:
-                linked_list.add(data)
-                self.draw_list(linked_list, linked_list.head)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Added node as linkedlist.head.next", anchor="w")
-                linked_list.length += 1
+                self.draw_list(linked_list, highlight_node=linked_list.head)
+                app.add_log(f"Added Node as linked_list.head: O(1) operation. LinkedList.Length: {linked_list.length}")
+                self.show_message(f"Added node as linked_list.head")
+            
+            # If the linked list only contains the head node (and no next node)
             elif node.next is None:
-                node.next = Node.Node(data)
-                self.draw_list(linked_list, node, node.next)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Added node to end of the list after traversing", anchor="w")
                 linked_list.length += 1
+                node.next = new_node
+                self.draw_list(linked_list, highlight_node=node, highlight_next=node.next)
+                app.add_log(f"Added Node as linked_list.head.next: O(1) operation. LinkedList.Length: {linked_list.length}")
+                self.show_message(f"Added node as linked_list.head.next")
+            
+            # If the current node has a next node, continue traversing
             else:
-                self.draw_list(linked_list, node)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text="Traversing", anchor="w")
+                self.draw_list(linked_list, highlight_node=node)
+                self.show_message("Traversing")
                 self.canvas.after(self.animation_speed, lambda: step(node.next))
 
+        # Start the step function with the head of the linked list
         step(linked_list.head)
 
-    def animate_delete(self, linked_list, data):
-        def clear_message():
-            self.canvas.delete("message")
-
-        def show_message(text):
-            clear_message()
-            self.canvas.create_text(self.start_x, self.start_y - 50, text=text, anchor="w", tags="message")
-
+    def animate_delete(self, app, linked_list, data):
+       
         def step(prev, current):
             if current is None:
                 self.draw_list(linked_list)
-                show_message("Node not found")
+                self.show_message("Node not found")
+                app.add_log("Node not present within LinkedList")
                 self.canvas.after(self.animation_speed, final_step)
             elif current.data == data:
                 self.draw_list(linked_list, highlight_node=current)
-                show_message(f"Node {data} found, deleting...")
+                self.show_message(f"Node {data} found, deleting...")
+                app.add_log(f"First Node with Data: {data} has been found. O(n) operation time. LinkedList.length: {linked_list.length-1}")
                 self.canvas.after(self.animation_speed, lambda: delete_node(prev, current))
             else:
                 self.draw_list(linked_list, highlight_node=current)
-                show_message(f"Traversing (current: {current.data})")
+                self.show_message(f"Traversing (current: {current.data})")
                 self.canvas.after(self.animation_speed, lambda: step(current, current.next))
 
         def delete_node(prev, current):
@@ -108,7 +106,7 @@ class LinkedListVisualizer:
                 prev.next = current.next
             linked_list.length -= 1
             
-            show_message(f"Deleted node {data}")
+            self.show_message(f"Deleted node {data}")
             self.canvas.after(self.animation_speed, lambda: redraw_after_delete(prev))
 
         def redraw_after_delete(prev):
@@ -117,16 +115,18 @@ class LinkedListVisualizer:
 
         def final_step():
             self.draw_list(linked_list)
-            show_message("Deletion complete")
+            self.show_message("Deletion complete")
+           
 
         step(None, linked_list.head)
 
-    def animate_reverse(self, linked_list):
+    def animate_reverse(self, app, linked_list):
         def reverse_step(nodes, prev_index, current_index):
             if current_index >= len(nodes):
                 linked_list.head = nodes[prev_index]
                 self.draw_list(linked_list)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text="Reversed", anchor="w")
+                self.show_message("Reversed")
+                app.add_log("List reversed. O(n) operation time. ")
                 return
 
             current = nodes[current_index]
@@ -139,7 +139,7 @@ class LinkedListVisualizer:
             
             # Visualize current step
             self.draw_list(temp_list, highlight_node=current, highlight_prev=prev, highlight_next=next_node)
-            self.canvas.create_text(self.start_x, self.start_y - 50, text="Reversing", anchor="w")
+            self.show_message("Reversing")
             
             # Reverse the connection
             if prev_index >= 0:
@@ -161,7 +161,8 @@ class LinkedListVisualizer:
             reverse_step(nodes, -1, 0)
         else:
             self.draw_list(linked_list)
-            self.canvas.create_text(self.start_x, self.start_y - 50, text="List is empty", anchor="w")
+            self.show_message("List is empty")
+            app.add_log(f"List Length is {linked_list.length}")
 
     def create_temp_list(self, nodes, prev_index, current_index):
         temp_list = LinkedList.LinkedList()
@@ -200,85 +201,93 @@ class LinkedListVisualizer:
 
             
 
-    def animate_sort(self, linked_list):
-
+    def animate_sort(self, app, linked_list):
         def step(current, sorted_end):
-            if sorted_end == linked_list.head.next:
+            if sorted_end == linked_list.head:
                 self.draw_list(linked_list)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text="Sorted", anchor="w")
+                self.show_message("Sorted")
+                app.add_log("LinkedList is sorted. O(n^2) operation time.")
             elif current.next == sorted_end:
                 self.canvas.after(self.animation_speed, lambda: step(linked_list.head, current))
             else:
                 if current.data > current.next.data:
                     current.data, current.next.data = current.next.data, current.data
                     self.draw_list(linked_list, current, current.next)
-                    self.canvas.create_text(self.start_x, self.start_y - 50, text="Swapped", anchor="w")
+                    self.show_message("Swapped")
+                    app.add_log(f"Swapped {current.data} with {current.next.data}")
                 else:
                     self.draw_list(linked_list, current, current.next)
-                    self.canvas.create_text(self.start_x, self.start_y - 50, text="Compared", anchor="w")
+                    self.show_message("Compared")
+                    app.add_log(f"Compared {current.data} with {current.next.data}")
                 self.canvas.after(self.animation_speed, lambda: step(current.next, sorted_end))
 
         if not linked_list.head or not linked_list.head.next:
             self.draw_list(linked_list)
-            self.canvas.create_text(self.start_x, self.start_y - 50, text="List too small", anchor="w")
+            self.show_message("List too small")
+            app.add_log(f"List is currently too small to sort. LinkedList.length: {linked_list.length}")
         else:
             step(linked_list.head, None)
 
-    def animate_generate_random_list(self, linked_list, length):
-        self.canvas.create_text(1920/2, 50, text=f"Generating a random list of Length {length}")
+    def animate_generate_random_list(self, app, linked_list, length):
+        self.show_message(f"Generating a random list of Length {length}")
         
         def step(count, current):
-            if count >= int(length):
+            if count >= length:
                 self.draw_list(linked_list)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text="Generation Complete", anchor="w")
+                self.show_message("Generation Complete")
             else:
-                self.canvas.create_text(1920/2, 50, text=f"Generating a random list of Length: {length}")
+                self.show_message(f"Generating a random list of Length: {length}")
                 
-                new_node = (Node.Node(str(random.randint(0, 100))))
+                new_node = (Node.Node(random.randint(0, 100)))
                 if count == 0:
                     linked_list.head = new_node
                     current = linked_list.head
+                    linked_list.length+=1
                 else:
                     current.next = new_node
                     current = current.next
+                    linked_list.length+=1
                 
-                linked_list.length += 1
+                
                 self.draw_list(linked_list, highlight_node=current)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Generated node {count + 1}", anchor="w")
-                self.canvas.create_text(1920/3, 50, text=f"Generating a random list of Length {length}")
+                self.show_message(f"Generated node {count + 1}")
+                app.add_log(f"Generated Node: {count+1}, Data: {current.data}")
+                self.canvas.create_text(1920/4+10, 50, text=f"Generating a random list of Length {length}")
                 self.canvas.after(self.animation_speed, lambda: step(count + 1, current))
 
         linked_list.head = None
         linked_list.length = 0
         step(0, None)
 
-    def animate_insert(self, linkedlist, index, data):
-        self.canvas.create_text(1920 / 2, 50, text="Animation Started")
-
+    def animate_insert(self, app, linked_list, index, data):
         def step(count, current, prev):
             if index == 0:
                 new_node = Node.Node(data)
-                new_node.next = linkedlist.head
-                linkedlist.head = new_node
-                self.draw_list(linkedlist, new_node)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Inserted node at index {index}", anchor="w")
+                new_node.next = linked_list.head
+                linked_list.head = new_node
+                self.draw_list(linked_list, new_node)
+                linked_list.length+=1
+                self.show_message(f"Inserted node as the head")
+                app.add_log(f"Node added at Index:{index}. O(1) operation: LinkedList.length: {linked_list.length}")
             elif count == index:
                 new_node = Node.Node(data)
                 new_node.next = current
                 prev.next = new_node
-                self.draw_list(linkedlist, new_node, highlight_prev=prev)
-                self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Inserted node at index {index}", anchor="w")
+                linked_list.length+=1
+                self.draw_list(linked_list, new_node, highlight_prev=prev, highlight_next=new_node.next)
+                self.show_message(f"Inserted node at index {index}")
+                app.add_log(f"Inserted Node at Index: {index}. O(n) operation: LinkedList.length: {linked_list.length}")
             else:
-                self.draw_list(linkedlist, current, highlight_prev=prev) 
-                
-                self.canvas.create_text(self.start_x, self.start_y - 50, text=f"Traversing (current: {count})", anchor="w")
+                self.draw_list(linked_list, current, highlight_prev=prev) 
+                self.show_message(f"Traversing (current: {count})")
                 self.canvas.after(self.animation_speed, lambda: step(count + 1, current.next, current))
-            linkedlist.length += 1
+            
 
         if index < 0:
-            self.canvas.create_text(self.start_x, self.start_y - 50, text="Index out of bounds", anchor="w")
+            self.show_message("Index out of bounds")
+            app.add_log(f"Index entered is out of bounds: {index}")
         else:
-            step(0, linkedlist.head, None)
+            step(0, linked_list.head, None)
 
     def toString(self, data):
         return str(data)

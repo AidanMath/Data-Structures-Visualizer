@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 import random
-import LinkedListVisualizer, LinkedList, ArrayVisualizer, HashTable, Queue, Stack, BinaryTree
+import Node, LinkedList, Array, Stack, Queue, BinaryTree, HashTable
+import LinkedListVisualizer, ArrayVisualizer, StackVisualizer
+
 import ast
 
 class DataStructureVisualizer:
@@ -127,9 +129,9 @@ class DataStructureVisualizer:
         # All Methods associated with their respective data structures
         self.methods = {
             "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "Generate"],
-            "Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "View"],
+            "Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "Generate"],
             "Queue": ["Add", "Delete", "Insert", "Reverse", "Sort", "Search", "Promote", "View"],
-            "Stack": ["Enqueue", "Dequeue", "Insert", "Peek", "Reverse", "Sort", "View"],
+            "Stack": ["Push", "Pop", "Insert", "Peek", "Reverse", "Sort", "Search"],
             "HashTable": ["Add", "Delete", "etc...", "View"],
             "BinaryTree": ["Inorder Traversal", "Preorder Traversal", "Other traversal", "etc...", "View"]
         }
@@ -152,9 +154,16 @@ class DataStructureVisualizer:
 
         # Initial array is of length 4 with nothing inside 
         self.array = [None, None, None, None]
-        self.array_visualizer = ArrayVisualizer.ArrayVisualizer(self.canvas)
+        self.array_visualizer = ArrayVisualizer.ArrayVisualizer(self.canvas, self.array)
+
+        #Stack Initilization
+        self.stack = Stack.Stack()
+        self.stack_visualizer = StackVisualizer.StackVisualizer(self.canvas, self.stack)
+
         if self.option.get() == None:
             self.canvas.delete("all")
+
+        
 
     def add_log(self, message):
         """
@@ -190,11 +199,13 @@ class DataStructureVisualizer:
         if self.method.get() == "Delete(Index)":
             label_text = "Enter Index"
         
-        if self.method.get() in ["Add", "Insert", "Delete", "Generate", "Delete(Index)"]:
+        if self.method.get() in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push"]:
             if self.method.get() == "Generate":
                 label_text = "Enter length:"
             elif self.method.get() == "Delete(Index)":
                 label_text = "Enter Index"
+            elif self.method.get() == "Binary Search":
+                label_text= "Enter Target"
             else:
                 label_text = "Enter Data:"
             if self.method.get() == "Insert":
@@ -212,7 +223,7 @@ class DataStructureVisualizer:
                 self.confirm.pack_forget()
                 self.confirm = tk.Button(self.left_frame, text="Confirm", command=self.execute_method, **BUTTON_STYLE)
                 self.confirm.pack(pady=(10, 20), padx=50)
-        elif self.method.get() == 'Reverse' or self.method.get() == 'Sort':
+        elif self.method.get() == 'Reverse' or self.method.get() == 'Sort' or self.method.get() == "Pop" or self.method.get() =="Peek":
             if hasattr(self, 'confirm'):
                 self.confirm.pack_forget()
                 self.confirm = tk.Button(self.left_frame, text="Confirm", command=self.execute_method, **BUTTON_STYLE)
@@ -222,54 +233,136 @@ class DataStructureVisualizer:
             pass
 
     def execute_method(self):
-
         """
         Executes the selected method for the chosen data structure.
 
         This method retrieves the selected data structure and method, and then performs the
         corresponding operation such as add, delete, insert, etc., and visualizes the results.
-
         """
 
         selected_structure = self.display_to_key[self.option.get()]
         selected_method = self.method.get()
+        #Linked List Methods
+        
+        def linked_list_add():
+            data=self.data_info_entry.get()
+            self.ll_visualizer.animate_add(self, self.linked_list, int(data))
 
-        if selected_structure == "LinkedList":
-            if selected_method == "Add":
-                data = self.data_info_entry.get()
-                self.ll_visualizer.animate_add(self.linked_list, data)
-            elif selected_method == "Delete":
-                if self.linked_list.head:
-                    data = self.data_info_entry.get()
-                    self.ll_visualizer.animate_delete(self.linked_list, data)
-            elif selected_method == "Insert":
-                if self.linked_list.length < int(self.index_entry.get()):
-                    self.canvas.create_text(1920/2, 50, text="Out of Bounds")
-                    self.canvas.delete("Out of Bounds")
-                else:
-                    data = self.data_info_entry.get()
-                    index = self.index_entry.get()
-                    self.ll_visualizer.animate_insert(self.linked_list, int(index), int(data))
-            elif selected_method == "Reverse":
-                self.ll_visualizer.animate_reverse(self.linked_list)
-            elif selected_method == "Sort":
-                self.ll_visualizer.animate_sort(self.linked_list)
-            elif selected_method == "View":
-                self.ll_visualizer.draw_list(self.linked_list)
-            elif selected_method == "Generate":
-                self.length = self.data_info_entry.get()
-                self.ll_visualizer.animate_generate_random_list(self.linked_list, self.length)
-        elif selected_structure == "Array":
-            if selected_method == "Add":
-                self.data = self.data_info_entry.get()
-                self.array_visualizer.animate_add(self, self.array, self.data)
-            if selected_method == "Delete":
-                self.data = self.data_info_entry.get()
-                self.array_visualizer.animate_delete(self, self.array, self.data)
-            if selected_method == "Delete(Index)":
-                self.index = self.data_info_entry.get()
-                self.array_visualizer.animate_delete(self, self.array, None, self.index)
+        def linked_list_delete():
+            data=self.data_info_entry.get()
+            if self.linked_list.head:
+                self.ll_visualizer.animate_delete(self, self.linked_list, int(data))
 
+        def linked_list_insert():
+            data=self.data_info_entry.get()
+            index= self.index_entry.get()
+            if self.linked_list.length >= int(index):
+                self.ll_visualizer.animate_insert(self, self.linked_list, int(index), int(data))
+            else:
+                self.add_log("Out of Bounds")
+
+        def linked_list_sort():
+            self.ll_visualizer.animate_sort(self, self.linked_list)
+        
+        # def linked_list_delete_index():
+        #     index = self.data_info_entry.get()
+        #     self.ll_visualizer.animate_delete(self, self.linked_list, int(index))
+
+       
+        def linked_list_reverse():
+            self.ll_visualizer.animate_reverse(self, self.linked_list)
+            
+        def linked_list_generate():
+            length=self.data_info_entry.get()
+            self.ll_visualizer.animate_generate_random_list(self, self.linked_list, int(length))
+
+    
+        #Array Methods 
+
+        def array_add():
+            data=self.data_info_entry.get()
+            self.array_visualizer.animate_add(self, self.array, int(data))
+
+        def array_delete():
+            if self.method.get() == "Delete(Index)":
+                self.array_visualizer.animate_delete(self, self.array, index=int(self.data_info_entry.get()), data=0)
+            else:
+                self.array_visualizer.animate_delete(self, self.array, data=int(self.data_info_entry.get()))
+        
+        def array_insert():
+            data = self.data_info_entry.get()
+            index= self.index_entry.get()
+            self.array_visualizer.animate_insert(self, self.array, int(data), int(index))
+        
+        def array_reverse():
+            self.array_visualizer.animate_reverse(self, self.array)
+            
+        def array_sort():
+            self.array_visualizer.animate_sort(self, self.array)
+
+        def array_binary_search():
+            target = self.data_info_entry.get()
+            self.array_visualizer.animate_binary_search(self, self.array, int(target))
+        
+        def array_generate():
+            length=self.data_info_entry.get()
+            self.array_visualizer.animate_generate(self, self.array, int(length))
+        
+        
+        #Stack Methods
+
+        def stack_push():
+            data=self.data_info_entry.get()
+            self.stack_visualizer.animate_push(self, int(data))
+
+        def stack_pop():
+            self.stack_visualizer.animate_pop(self)
+
+        def stack_peek():
+            self.stack_visualizer.animate_peek(self)
+
+        def stack_reverse():
+            self.stack_visualizer.animate_reverse(self)
+        # Map structure and method to these regular functions
+        actions = {
+            "LinkedList": {
+                "Add": linked_list_add,
+                "Delete": linked_list_delete,
+                #"Delete(Index)": linked_list_delete_index,
+                "Insert": linked_list_insert,
+                "Reverse": linked_list_reverse,
+                "Sort": linked_list_sort,
+                "Generate": linked_list_generate
+                
+            },
+            #"LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "Generate"],
+            #Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "Generate"],
+            "Array": {
+                "Add": array_add,
+                "Delete": array_delete,
+                "Delete(Index)": array_delete,
+                "Insert": array_insert,
+                "Reverse": array_reverse,
+                "Sort": array_sort,
+                "Binary Search": array_binary_search,
+                "Generate": array_generate
+            },
+            "Stack": {
+                "Push": stack_push,
+                "Pop": stack_pop,
+                "Peek": stack_peek,
+                "Reverse": stack_reverse
+            }
+
+        }
+
+        # Execute the action if it exists
+        if selected_structure in actions and selected_method in actions[selected_structure]:
+            actions[selected_structure][selected_method]()
+        else:
+            self.canvas.create_text(1920/2, 50, text="Invalid Operation")
+
+                
     def update_methods(self, selected_display_option):
 
         """
