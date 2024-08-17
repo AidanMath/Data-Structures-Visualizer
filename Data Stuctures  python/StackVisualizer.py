@@ -16,14 +16,15 @@ class StackVisualizer:
         self.clear_message()
         x_center = self.canvas.winfo_width() // 2  # Center the text horizontally
         self.canvas.create_text(
-            x_center, self.stack_height + 20,
+            x_center, 40,
             text=text,
             anchor="center", 
             tags="message"
         )
+        self.canvas.update_idletasks()  
 
     def draw_stack(self, highlight_node=None, second_stack=None):
-        self.canvas.delete("all")
+        self.canvas.delete("stack_elements")
         x_center = self.canvas.winfo_width() // 2 
         if self.stack.is_empty() and (second_stack is None or second_stack.is_empty()):
             self.show_message("Length of Stack is 0")
@@ -95,13 +96,13 @@ class StackVisualizer:
         self.canvas.create_rectangle(
             x_center - self.stack_width // 2, y_position,
             x_center + self.stack_width // 2, y_position + self.stack_height,
-            fill=color
+            fill=color,tags="stack_elements"
         )
 
         self.canvas.create_text(
             x_center, y_position + self.stack_height // 2,  # Center the text in the middle of the rectangle
             text=str(data),
-            fill="black"
+            fill="black",tags="stack_elements"
         )
 
     def animate_push(self, app,  data):
@@ -193,29 +194,174 @@ class StackVisualizer:
         step()
 
     def animate_generate(self, app, length):
-        count=0
+        
         self.stack.top=None
         def step(count):
             if count == length:
                 self.draw_stack(highlight_node=self.stack.top)
-                app.add_log(f"Genrated Stack of length: {self.stack.length}")
+                app.add_log(f"Generated Stack of length: {length}")
+                self.show_message("Generation complete")
+                return
             else:
                 current= Node.Node(random.randint(1,100))
-                if self.stack.top is None:
-                    self.stack.top=current
-                else:
-                    current.next=self.top.next
-                    self.top=current
-                    self.draw_stack(highlight_node=self.stack.top)
-                    self.canvas.after(self.animation_speed, lambda: step(count+1))
+                current.next=self.stack.top
+                self.stack.top=current
+                self.stack.size+=1
+                app.add_log(f"Added: {current.data}, O(1) operation")
+                self.show_message(f"Generating... ")
+                self.draw_stack(highlight_node=self.stack.top)
+                self.canvas.after(self.animation_speed, lambda: step(count+1))
         step(0)
 
+    def animate_stack_sort(self, app):
+        temp_stack = Stack.Stack()
+
+        def update_message(message):
+            self.show_message(message)
+            
+
+        def transfer_step():
+            if not self.stack.is_empty():
+                current = self.stack.top
+                self.stack.top = self.stack.top.next
+                current.next = None  # Disconnect from original stack
+                app.add_log(f"Popped {current.data} from original stack")
+                update_message(f"Sorting... Comparing {current.data}")
+                self.canvas.after(self.animation_speed, lambda: insert_step(current))
+            else:
+                # Transfer back to original stack
+                self.canvas.after(self.animation_speed, transfer_back_step)
+
+        def insert_step(current):
+            if not temp_stack.is_empty() and temp_stack.top.data > current.data:
+                popped = temp_stack.top
+                temp_stack.top = temp_stack.top.next
+                popped.next = self.stack.top
+                self.stack.top = popped
+                app.add_log(f"Moved {popped.data} back to original stack")
+                update_message(f"Comparing {current.data} with {popped.data}")
+                self.draw_stack(highlight_node=self.stack.top, second_stack=temp_stack)
+                self.canvas.after(self.animation_speed, lambda: insert_step(current))
+            else:
+                current.next = temp_stack.top
+                temp_stack.top = current
+                app.add_log(f"Pushed {current.data} to temporary stack")
+                update_message(f"Inserted {current.data} into temporary stack")
+                self.draw_stack(highlight_node=temp_stack.top, second_stack=temp_stack)
+                self.canvas.after(self.animation_speed, transfer_step)
+
+        def transfer_back_step():
+            if not temp_stack.is_empty():
+                current = temp_stack.top
+                temp_stack.top = temp_stack.top.next
+                current.next = self.stack.top
+                self.stack.top = current
+                app.add_log(f"Transferred {current.data} back to original stack")
+                update_message(f"Finalizing... Moving {current.data}")
+                self.draw_stack(highlight_node=self.stack.top, second_stack=temp_stack)
+                self.canvas.after(self.animation_speed, transfer_back_step)
+            else:
+                app.add_log("Sorting completed")
+                update_message("Sorting completed")
+                self.draw_stack()
+
+        update_message("Starting sort...")
+        self.canvas.after(self.animation_speed, transfer_step)
+
+    def animate_search(self, app, target):
+        temp = Stack.Stack()
+
+     
+
+        def step():
+            self.show_message("Looking for target")
+            if self.stack.is_empty():
+                self.show_message("Not in Stack")
+                self.canvas.after(self.animation_speed, transfer_back)
+            else:
+                self.draw_stack(highlight_node=self.stack.top, second_stack=temp)
+                self.canvas.after(self.animation_speed, transfer)
+
+        def transfer():
+            if self.stack.is_empty():
+                self.show_message("Target not found")
+                self.canvas.after(self.animation_speed, transfer_back)
+            else:
+                current = self.stack.top
+                self.stack.top = self.stack.top.next
+                if current.data == target:
+                    app.add_log(f"Target {target} found")
+                    self.show_message(f"Target {target} found!")
+                    current.next = temp.top
+                    temp.top = current
+                    self.draw_stack(highlight_node=current, second_stack=temp)
+                    self.canvas.after(self.animation_speed, transfer_back)
+                else:
+                    app.add_log(f"Checking {current.data}")
+                    self.show_message(f"Checking {current.data}")
+                    current.next = temp.top
+                    temp.top = current
+                    self.draw_stack(highlight_node=current, second_stack=temp)
+                    self.canvas.after(self.animation_speed, transfer)
+
+        def transfer_back():
+            if temp.is_empty():
+                self.show_message("Search completed")
+                self.draw_stack()
+            else:
+                current = temp.top
+                temp.top = temp.top.next
+                current.next = self.stack.top
+                self.stack.top = current
+                app.add_log(f"Transferring {current.data} back to original stack")
+                self.show_message(f"Transferring back: {current.data}")
+                self.draw_stack(highlight_node=current, second_stack=temp)
+                self.canvas.after(self.animation_speed, transfer_back)
+
+        step()
+
+    def animate_insert(self, app, data, index):
+        add= Node.Node(data)
+        if self.stack.size==0:
+            app.add_log("Stack too small")
+        elif index>self.stack.size or index<0:
+            app.add_log("Index out of range")
+
+        current=self.stack.top
+
+    def animate_insert(self, app, data, index):
+        add = Node.Node(data)
+        
+        if self.stack.size == 0:
+            app.add_log("Stack is empty")
+            return
+        elif index > self.stack.size or index < 0:
+            app.add_log("Index out of range")
+            return
+
+
+        count = 0
+
+        def step(count, current):
+            # To modify 'current' inside the nested function
+            
+            if count == index-1:
+                add.next = current.next  # Fixing the pointer to the next node
+                current.next = add       # Inserting the new node
+                app.add_log(f"Added to index: {index}")
+                self.show_message("Added")
+                self.draw_stack(highlight_node=add)
+            else:
+                app.add_log(f"Searching... current index: {count}")
+                self.show_message(f"Searching...")
+                self.draw_stack(highlight_node=current)
+                self.canvas.after(self.animation_speed, lambda: step(count + 1, current.next))
+
+        step(0, self.stack.top)  
+
+                
+
 
 
 
             
-            
-
-
-
-

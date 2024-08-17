@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import random
 import Node, LinkedList, Array, Stack, Queue, BinaryTree, HashTable
-import LinkedListVisualizer, ArrayVisualizer, StackVisualizer
+import LinkedListVisualizer, ArrayVisualizer, StackVisualizer, BinaryTreeVisualizer
 
 import ast
 
@@ -131,9 +131,9 @@ class DataStructureVisualizer:
             "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "Generate"],
             "Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "Generate"],
             "Queue": ["Add", "Delete", "Insert", "Reverse", "Sort", "Search", "Promote", "View"],
-            "Stack": ["Push", "Pop", "Insert", "Peek", "Reverse", "Sort", "Search"],
+            "Stack": ["Push", "Pop", "Insert", "Peek", "Reverse", "Sort", "Search", "Generate"],
             "HashTable": ["Add", "Delete", "etc...", "View"],
-            "BinaryTree": ["Inorder Traversal", "Preorder Traversal", "Other traversal", "etc...", "View"]
+            "BinaryTree": ["Add", "Delete", "Inorder Traversal", "Preorder Traversal", "Other traversal", "Generate", "View"]
         }
         
         
@@ -159,6 +159,9 @@ class DataStructureVisualizer:
         #Stack Initilization
         self.stack = Stack.Stack()
         self.stack_visualizer = StackVisualizer.StackVisualizer(self.canvas, self.stack)
+
+        self.binary_tree= BinaryTree.BinaryTree()
+        self.bt_visualizer = BinaryTreeVisualizer.BinaryTreeVisualizer(self.canvas, self.binary_tree)
 
         if self.option.get() == None:
             self.canvas.delete("all")
@@ -199,12 +202,12 @@ class DataStructureVisualizer:
         if self.method.get() == "Delete(Index)":
             label_text = "Enter Index"
         
-        if self.method.get() in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push"]:
+        if self.method.get() in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push", "Search"]:
             if self.method.get() == "Generate":
                 label_text = "Enter length:"
             elif self.method.get() == "Delete(Index)":
                 label_text = "Enter Index"
-            elif self.method.get() == "Binary Search":
+            elif self.method.get() == "Binary Search" or self.method.get() == "Search":
                 label_text= "Enter Target"
             else:
                 label_text = "Enter Data:"
@@ -235,7 +238,7 @@ class DataStructureVisualizer:
     def execute_method(self):
         """
         Executes the selected method for the chosen data structure.
-
+x
         This method retrieves the selected data structure and method, and then performs the
         corresponding operation such as add, delete, insert, etc., and visualizes the results.
         """
@@ -323,7 +326,37 @@ class DataStructureVisualizer:
 
         def stack_reverse():
             self.stack_visualizer.animate_reverse(self)
+        
+        def stack_generate():
+            length=self.data_info_entry.get()
+            self.stack_visualizer.animate_generate(self, int(length))
+
+        def stack_sort():
+            self.stack_visualizer.animate_stack_sort(self)
+        
+        def stack_search():
+            target= self.data_info_entry.get()
+            self.stack_visualizer.animate_search(self, int(target))
+
+        def stack_insert():
+            index = self.index_entry.get()
+            data = self.data_info_entry.get()
+            self.stack_visualizer.animate_insert(self, int(data), int(index))
+        
+        def binary_tree_add():
+            data=self.data_info_entry.get()
+            self.bt_visualizer.animate_add(self, int(data))
+        
+        def binary_tree_delete():
+            data=self.data_info_entry.get()
+            self.bt_visualizer.animate_delete(self, int(data))
+        
+        def binary_tree_generate():
+            length= self.data_info_entry.get()
+            self.bt_visualizer.animate_random_tree(self, int(length))
+
         # Map structure and method to these regular functions
+
         actions = {
             "LinkedList": {
                 "Add": linked_list_add,
@@ -335,8 +368,7 @@ class DataStructureVisualizer:
                 "Generate": linked_list_generate
                 
             },
-            #"LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "Generate"],
-            #Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "Generate"],
+            
             "Array": {
                 "Add": array_add,
                 "Delete": array_delete,
@@ -347,11 +379,21 @@ class DataStructureVisualizer:
                 "Binary Search": array_binary_search,
                 "Generate": array_generate
             },
+
             "Stack": {
                 "Push": stack_push,
                 "Pop": stack_pop,
                 "Peek": stack_peek,
-                "Reverse": stack_reverse
+                "Reverse": stack_reverse,
+                "Generate": stack_generate,
+                "Sort": stack_sort,
+                "Search": stack_search,
+                "Insert": stack_insert
+            },
+            "BinaryTree": {
+                "Add": binary_tree_add,
+                "Delete": binary_tree_delete,
+                "Generate": binary_tree_generate
             }
 
         }
