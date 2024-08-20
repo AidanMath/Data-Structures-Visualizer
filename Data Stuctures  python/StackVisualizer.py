@@ -24,6 +24,7 @@ class StackVisualizer:
         self.canvas.update_idletasks()  
 
     def draw_stack(self, highlight_node=None, second_stack=None):
+        
         self.canvas.delete("stack_elements")
         x_center = self.canvas.winfo_width() // 2 
         if self.stack.is_empty() and (second_stack is None or second_stack.is_empty()):
@@ -32,7 +33,7 @@ class StackVisualizer:
         if second_stack:
             temp = Stack.Stack()
             temp2 = Stack.Stack()
-            y_position = 462  # Start drawing from the top
+            y_position = self.canvas.winfo_height() -240
 
             while not self.stack.is_empty():
                 current = self.stack.top
@@ -56,7 +57,7 @@ class StackVisualizer:
                 current.next = self.stack.top
                 self.stack.top = current
 
-            y_position = 462  # Reset y_position for the second stack
+            y_position = self.canvas.winfo_height() -240
             while not temp2.is_empty():
                 current = temp2.top
                 temp2.top = current.next
@@ -69,7 +70,7 @@ class StackVisualizer:
             
         else:
             temp_stack = Stack.Stack()
-            y_position = 462  # Start drawing from the top
+            y_position = self.canvas.winfo_height() -240  # Start drawing from the top
 
             # Reverse the stack to draw it from top to bottom
             while not self.stack.is_empty():
@@ -164,18 +165,18 @@ class StackVisualizer:
     def animate_reverse(self, app):
         self.show_message("Starting reverse...")
         temp = Stack.Stack()
-    
+
         def step():
-            nonlocal  temp
+            nonlocal temp
             if self.stack.is_empty():
                 app.add_log("Finished")
                 self.show_message("Finished")
-               
                 self.stack, temp = temp, self.stack
                 self.draw_stack()
                 return
 
             self.draw_stack(highlight_node=self.stack.top, second_stack=temp)
+            # Schedule the next step
             self.canvas.after(self.animation_speed, transfer)
 
         def transfer():
@@ -185,13 +186,17 @@ class StackVisualizer:
                 self.stack.top = self.stack.top.next
                 current.next = temp.top
                 temp.top = current
-                temp.size+=1
-                self.draw_stack(highlight_node=temp.top, second_stack=temp)
-                self.canvas.after(self.animation_speed, step())
-            else:
-                step()
+                temp.size += 1
 
-        step()
+                # Draw the updated stacks with highlighting
+                self.draw_stack(highlight_node=temp.top, second_stack=temp)
+                # Schedule the next step
+                self.canvas.after(self.animation_speed, step)
+            else:
+                step()  # Final call to step after the last transfer
+
+        step()  # Start the animation
+
 
     def animate_generate(self, app, length):
         

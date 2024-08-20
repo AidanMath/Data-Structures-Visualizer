@@ -79,11 +79,12 @@ class DataStructureVisualizer:
         # Label for the log
         info_log_label = tk.Label(info_log, text="Current Log", bg="#4a4a4a", fg="white", font=("Arial", 12, "bold"))
         info_log_label.pack(side="top", fill="x")
+      
 
         # Frame where logging happeens
         text_frame = tk.Frame(info_log, bg="#f0f0f0")
         text_frame.pack(side="top", fill="both", expand=True, padx=10, pady=(5, 10))
-
+        
         # Text widget it logs to
         self.text_widget = tk.Text(text_frame, wrap="word", height=8, width=50, bg="white", fg="#333333", font=("Arial", 10))
         self.text_widget.pack(side="left", fill="both", expand=True)
@@ -127,13 +128,14 @@ class DataStructureVisualizer:
         self.method = tk.StringVar()
 
         # All Methods associated with their respective data structures
+
         self.methods = {
             "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "Generate"],
             "Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "Generate"],
-            "Queue": ["Add", "Delete", "Insert", "Reverse", "Sort", "Search", "Promote", "View"],
+            "Queue": ["Add", "Delete", "Insert", "Reverse", "Sort", "Search", "Promote"],
             "Stack": ["Push", "Pop", "Insert", "Peek", "Reverse", "Sort", "Search", "Generate"],
             "HashTable": ["Add", "Delete", "etc...", "View"],
-            "BinaryTree": ["Add", "Delete", "Inorder Traversal", "Preorder Traversal", "Other traversal", "Generate", "View"]
+            "BinaryTree": ["Add", "Delete", "Inorder Traversal", "Preorder Traversal", "Postorder Traversal", "Generate"]
         }
         
         
@@ -142,12 +144,9 @@ class DataStructureVisualizer:
 
         # Sets the Method and updates it accordinghly
 
-        self.update_methods(self.option.get())
+        
 
-        # Create confirm button
-        self.confirm = tk.Button(self.left_frame, text="Confirm", command=self.execute_method, **BUTTON_STYLE)
-        self.confirm.pack(pady=10, padx=20)
-
+      
         # Initialize LinkedList and its visualizer
         self.linked_list = LinkedList.LinkedList()
         self.ll_visualizer = LinkedListVisualizer.LinkedListVisualizer(self.canvas)
@@ -163,11 +162,18 @@ class DataStructureVisualizer:
         self.binary_tree= BinaryTree.BinaryTree()
         self.bt_visualizer = BinaryTreeVisualizer.BinaryTreeVisualizer(self.canvas, self.binary_tree)
 
+        self.update_methods(self.option.get())
+
         if self.option.get() == None:
             self.canvas.delete("all")
 
-        
+    def clear_canvas(self):
+        """
+        Clears all items from the canvas.
+        """
+        self.canvas.delete("all")
 
+   
     def add_log(self, message):
         """
         Adds a log message to the text widget.
@@ -180,143 +186,154 @@ class DataStructureVisualizer:
         self.text_widget.see(tk.END)
 
     def display_node_info(self):
-
         """
         Displays input fields and labels for node information based on the selected method.
-
-        This method updates the UI elements to allow user input for the selected method, such as 
-        adding, deleting, or inserting data. It also updates the confirm button's state.
-
         """
-
-        TITLE_STYLE = {"font": ("Arial", 20, "bold"), "bg": "#e0e0e0", "fg": "#333333"}
         LABEL_STYLE = {"font": ("Arial", 16, "bold"), "bg": "#e0e0e0", "fg": "#333333"}
-        BUTTON_STYLE = {"font": ("Arial", 10, "bold"), "bg": "white", "fg": "black", "activebackground": "#666666",  "activeforeground": "green", "relief": "raised", "bd": 2, "padx": 2, "pady": 5}
         ENTRY_STYLE = {"font": ("Arial", 14, "bold"), "bg": "white", "fg": "#333333", "insertbackground": "#333333"}
+        BUTTON_STYLE = {"font": ("Arial", 10, "bold"), "bg": "white", "fg": "black", "activebackground": "#666666", "activeforeground": "green", "relief": "raised", "bd": 2, "padx": 2, "pady": 5}
 
-        # First, remove existing widgets if they exist
-        for widget in ['data_info_label', 'data_info_entry', 'index_label', 'index_entry']:
-            if hasattr(self, widget):
-                getattr(self, widget).pack_forget()
-                
-        if self.method.get() == "Delete(Index)":
-            label_text = "Enter Index"
-        
-        if self.method.get() in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push", "Search"]:
-            if self.method.get() == "Generate":
-                label_text = "Enter length:"
-            elif self.method.get() == "Delete(Index)":
-                label_text = "Enter Index"
-            elif self.method.get() == "Binary Search" or self.method.get() == "Search":
-                label_text= "Enter Target"
+        # Remove existing widgets
+        self.clear_input_widgets()
+
+        method = self.method.get()
+        option = self.option.get()
+
+        if method in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push", "Search"]:
+            # Determine label text
+            if method == "Generate":
+                if self.display_to_key[option] == "BinaryTree":
+                    label_text = "Enter Depth(4 or less works best):"
+                else:
+                    label_text = "Enter length:"
+            elif method == "Delete(Index)":
+                label_text = "Enter Index:"
+            elif method in ["Binary Search", "Search"]:
+                label_text = "Enter Target:"
             else:
                 label_text = "Enter Data:"
-            if self.method.get() == "Insert":
+
+            # Create and pack data entry widgets
+            self.data_info_label = tk.Label(self.left_frame, text=label_text, **LABEL_STYLE)
+            self.data_info_label.pack(pady=(10, 5), padx=50)
+            self.data_info_entry = tk.Entry(self.left_frame, width=10, **ENTRY_STYLE)
+            self.data_info_entry.pack(pady=(0, 10), padx=50)
+
+            # Add index entry for Insert method
+            if method == "Insert":
                 self.index_label = tk.Label(self.left_frame, text="Enter Index:", **LABEL_STYLE)
                 self.index_label.pack(pady=(10, 5), padx=50)
                 self.index_entry = tk.Entry(self.left_frame, width=10, **ENTRY_STYLE)
                 self.index_entry.pack(pady=(0, 10), padx=50)
 
-            self.data_info_label = tk.Label(self.left_frame, text=label_text, **LABEL_STYLE)
-            self.data_info_label.pack(pady=(10, 5), padx=50)
+        # Create and pack confirm button for methods that need it
+        if method in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push", "Search", 
+                    "Reverse", "Sort", "Pop", "Peek", "Inorder Traversal", "Preorder Traversal", "Postorder Traversal"]:
+            self.confirm = tk.Button(self.left_frame, text="Confirm", command=self.execute_method, **BUTTON_STYLE)
+            self.confirm.pack(pady=(10, 20), padx=50)
 
-            self.data_info_entry = tk.Entry(self.left_frame, width=10, **ENTRY_STYLE)
-            self.data_info_entry.pack(pady=(0, 10), padx=50)
-            if hasattr(self, 'confirm'):
-                self.confirm.pack_forget()
-                self.confirm = tk.Button(self.left_frame, text="Confirm", command=self.execute_method, **BUTTON_STYLE)
-                self.confirm.pack(pady=(10, 20), padx=50)
-        elif self.method.get() == 'Reverse' or self.method.get() == 'Sort' or self.method.get() == "Pop" or self.method.get() =="Peek":
-            if hasattr(self, 'confirm'):
-                self.confirm.pack_forget()
-                self.confirm = tk.Button(self.left_frame, text="Confirm", command=self.execute_method, **BUTTON_STYLE)
-                self.confirm.pack(pady=(10, 20), padx=20)
-        else:
-            self.confirm.pack_forget()
-            pass
+    def clear_input_widgets(self):
+        """
+        Removes existing input widgets from the left frame.
+        """
+        widgets = ['data_info_label', 'data_info_entry', 'index_label', 'index_entry', 'confirm']
+        for widget in widgets:
+            if hasattr(self, widget):
+                getattr(self, widget).destroy()
+                delattr(self, widget)
 
     def execute_method(self):
         """
         Executes the selected method for the chosen data structure.
-x
         This method retrieves the selected data structure and method, and then performs the
         corresponding operation such as add, delete, insert, etc., and visualizes the results.
         """
 
         selected_structure = self.display_to_key[self.option.get()]
         selected_method = self.method.get()
-        #Linked List Methods
         
+    # Utility function to safely convert input to int
+        def safe_int_conversion(value):
+            try:
+                return int(value)
+            except ValueError:
+                self.add_log("Please enter valid Data.")
+                return None
+
+    # Linked List Methods
         def linked_list_add():
-            data=self.data_info_entry.get()
-            self.ll_visualizer.animate_add(self, self.linked_list, int(data))
+            data = safe_int_conversion(self.data_info_entry.get())
+            if data is not None:
+                self.ll_visualizer.animate_add(self, self.linked_list, data)
 
         def linked_list_delete():
-            data=self.data_info_entry.get()
-            if self.linked_list.head:
-                self.ll_visualizer.animate_delete(self, self.linked_list, int(data))
+            data = safe_int_conversion(self.data_info_entry.get())
+            if data is not None and self.linked_list.head:
+                self.ll_visualizer.animate_delete(self, self.linked_list, data)
 
         def linked_list_insert():
-            data=self.data_info_entry.get()
-            index= self.index_entry.get()
-            if self.linked_list.length >= int(index):
-                self.ll_visualizer.animate_insert(self, self.linked_list, int(index), int(data))
-            else:
-                self.add_log("Out of Bounds")
+            data = safe_int_conversion(self.data_info_entry.get())
+            index = safe_int_conversion(self.index_entry.get())
+            if data is not None and index is not None:
+                if self.linked_list.length >= index:
+                    self.ll_visualizer.animate_insert(self, self.linked_list, index, data)
+                else:
+                    self.add_log("Out of Bounds")
 
         def linked_list_sort():
             self.ll_visualizer.animate_sort(self, self.linked_list)
-        
-        # def linked_list_delete_index():
-        #     index = self.data_info_entry.get()
-        #     self.ll_visualizer.animate_delete(self, self.linked_list, int(index))
-
-       
+            
         def linked_list_reverse():
             self.ll_visualizer.animate_reverse(self, self.linked_list)
-            
+                
         def linked_list_generate():
-            length=self.data_info_entry.get()
-            self.ll_visualizer.animate_generate_random_list(self, self.linked_list, int(length))
+            length = safe_int_conversion(self.data_info_entry.get())
+            if length is not None:
+                self.ll_visualizer.animate_generate_random_list(self, self.linked_list, length)
 
-    
-        #Array Methods 
-
+        # Array Methods
         def array_add():
-            data=self.data_info_entry.get()
-            self.array_visualizer.animate_add(self, self.array, int(data))
+            data = safe_int_conversion(self.data_info_entry.get())
+            if data is not None:
+                self.array_visualizer.animate_add(self, self.array, data)
 
         def array_delete():
             if self.method.get() == "Delete(Index)":
-                self.array_visualizer.animate_delete(self, self.array, index=int(self.data_info_entry.get()), data=0)
+                index = safe_int_conversion(self.data_info_entry.get())
+                if index is not None:
+                    self.array_visualizer.animate_delete(self, self.array, index=index, data=0)
             else:
-                self.array_visualizer.animate_delete(self, self.array, data=int(self.data_info_entry.get()))
-        
+                data = safe_int_conversion(self.data_info_entry.get())
+                if data is not None:
+                    self.array_visualizer.animate_delete(self, self.array, data=data)
+            
         def array_insert():
-            data = self.data_info_entry.get()
-            index= self.index_entry.get()
-            self.array_visualizer.animate_insert(self, self.array, int(data), int(index))
-        
+            data = safe_int_conversion(self.data_info_entry.get())
+            index = safe_int_conversion(self.index_entry.get())
+            if data is not None and index is not None:
+                self.array_visualizer.animate_insert(self, self.array, data, index)
+            
         def array_reverse():
             self.array_visualizer.animate_reverse(self, self.array)
-            
+                
         def array_sort():
             self.array_visualizer.animate_sort(self, self.array)
 
         def array_binary_search():
-            target = self.data_info_entry.get()
-            self.array_visualizer.animate_binary_search(self, self.array, int(target))
-        
+            target = safe_int_conversion(self.data_info_entry.get())
+            if target is not None:
+                self.array_visualizer.animate_binary_search(self, self.array, target)
+            
         def array_generate():
-            length=self.data_info_entry.get()
-            self.array_visualizer.animate_generate(self, self.array, int(length))
-        
-        
-        #Stack Methods
+            length = safe_int_conversion(self.data_info_entry.get())
+            if length is not None:
+                self.array_visualizer.animate_generate(self, self.array, length)
 
+        # Stack Methods
         def stack_push():
-            data=self.data_info_entry.get()
-            self.stack_visualizer.animate_push(self, int(data))
+            data = safe_int_conversion(self.data_info_entry.get())
+            if data is not None:
+                self.stack_visualizer.animate_push(self, data)
 
         def stack_pop():
             self.stack_visualizer.animate_pop(self)
@@ -326,34 +343,53 @@ x
 
         def stack_reverse():
             self.stack_visualizer.animate_reverse(self)
-        
+            
         def stack_generate():
-            length=self.data_info_entry.get()
-            self.stack_visualizer.animate_generate(self, int(length))
+            length = safe_int_conversion(self.data_info_entry.get())
+            if length is not None:
+                self.stack_visualizer.animate_generate(self, length)
 
         def stack_sort():
             self.stack_visualizer.animate_stack_sort(self)
-        
+            
         def stack_search():
-            target= self.data_info_entry.get()
-            self.stack_visualizer.animate_search(self, int(target))
+            target = safe_int_conversion(self.data_info_entry.get())
+            if target is not None:
+                self.stack_visualizer.animate_search(self, target)
 
         def stack_insert():
-            index = self.index_entry.get()
-            data = self.data_info_entry.get()
-            self.stack_visualizer.animate_insert(self, int(data), int(index))
-        
+            index = safe_int_conversion(self.index_entry.get())
+            data = safe_int_conversion(self.data_info_entry.get())
+            if index is not None and data is not None:
+                self.stack_visualizer.animate_insert(self, data, index)
+            
+        # Binary Tree Methods
         def binary_tree_add():
-            data=self.data_info_entry.get()
-            self.bt_visualizer.animate_add(self, int(data))
-        
+            data = safe_int_conversion(self.data_info_entry.get())
+            if data is not None:
+                self.bt_visualizer.animate_add(self, data)
+            
         def binary_tree_delete():
-            data=self.data_info_entry.get()
-            self.bt_visualizer.animate_delete(self, int(data))
-        
+            data = safe_int_conversion(self.data_info_entry.get())
+            if data is not None:
+                self.bt_visualizer.animate_delete(self, data)
+            
         def binary_tree_generate():
-            length= self.data_info_entry.get()
-            self.bt_visualizer.animate_random_tree(self, int(length))
+            length = safe_int_conversion(self.data_info_entry.get())
+            if length is not None:
+                self.bt_visualizer.animate_random_tree(self, length)
+
+        def binary_tree_inorder():
+            self.bt_visualizer.animate_in_order(self)
+            
+        def binary_tree_postorder():
+            self.bt_visualizer.animate_post_order(self)
+            
+        def binary_tree_preorder():
+            self.bt_visualizer.animate_pre_order(self)
+        
+        
+
 
         # Map structure and method to these regular functions
 
@@ -385,7 +421,7 @@ x
                 "Pop": stack_pop,
                 "Peek": stack_peek,
                 "Reverse": stack_reverse,
-                "Generate": stack_generate,
+                "Generate": stack_generate,  
                 "Sort": stack_sort,
                 "Search": stack_search,
                 "Insert": stack_insert
@@ -393,33 +429,30 @@ x
             "BinaryTree": {
                 "Add": binary_tree_add,
                 "Delete": binary_tree_delete,
-                "Generate": binary_tree_generate
+                "Generate": binary_tree_generate,
+                "Inorder Traversal": binary_tree_inorder,
+                "Postorder Traversal": binary_tree_postorder,
+                "Preorder Traversal": binary_tree_preorder
             }
 
         }
 
         # Execute the action if it exists
         if selected_structure in actions and selected_method in actions[selected_structure]:
+            # Clear canvas before executing the method
+           
             actions[selected_structure][selected_method]()
         else:
             self.canvas.create_text(1920/2, 50, text="Invalid Operation")
-
                 
     def update_methods(self, selected_display_option):
-
         """
         Updates the available methods based on the selected data structure.
-
-        Parameters:
-        selected_display_option (str): The name of the selected data structure.
-        
-        Updates the method menu with the available methods for the selected data structure
-        and refreshes the UI elements accordingly.
-
         """
-
         selected_key = self.display_to_key[selected_display_option]
         methods = self.methods.get(selected_key, [])
+        # Clear the canvas before updating methods
+        self.clear_canvas()
 
         self.method_menu['values'] = methods
 
@@ -431,6 +464,9 @@ x
         # Call display_node_info whenever the method changes
         self.display_node_info()
 
+        
+
+        # Ensure display_node_info is called when the method changes
         self.method.trace('w', lambda *args: self.display_node_info())
 
 if __name__ == "__main__":

@@ -6,25 +6,28 @@ import BTNode
 import random 
 
 class BinaryTreeVisualizer:
-
-    def __init__(self, canvas, BinaryTree):
+    def __init__(self, canvas, binary_tree):
         self.canvas = canvas
         self.node_radius = 20
         self.x_spacing = 37  # Reduced from 50
         self.y_spacing = 60  # Reduced from 75
-        self.start_x = 500
-        self.start_y = 50
+        self.binary_tree = binary_tree
         self.animation_speed = 500  # milliseconds
-        self.binary_tree = BinaryTree
+        
+    
+        self.start_x = 747
+        self.start_y = 50
 
+       
     def draw_tree(self, highlight_node=None):
-        self.canvas.delete("all")
+        self.canvas.delete("tree_elements")  # Clear only tree elements
         if self.binary_tree.root:
             self._draw_node(self.binary_tree.root, self.start_x, self.start_y, 0, highlight_node)
 
+
     def _draw_node(self, node, x, y, level, highlight_node):
         color = "lightblue" if node == highlight_node else "white"
-        self.draw_node(x, y, self.toString(node.data), color)
+        self.draw_node(x, y, self.toString(node.data), color, "tree_elements")
 
         if node.left:
             child_x = x - self.x_spacing * (2 ** (2 - min(level, 2)))  # Adjusted formula
@@ -38,11 +41,11 @@ class BinaryTreeVisualizer:
             self.draw_arrow(x, y, child_x, child_y)
             self._draw_node(node.right, child_x, child_y, level + 1, highlight_node)
 
-    def draw_node(self, x, y, data, color="white"):
+    def draw_node(self, x, y, data, color="white", tags=None):
         self.canvas.create_oval(x - self.node_radius, y - self.node_radius,
                                 x + self.node_radius, y + self.node_radius,
-                                fill=color, outline="black")
-        self.canvas.create_text(x, y, text=self.toString(data))
+                                fill=color, outline="black", tags=tags)
+        self.canvas.create_text(x, y, text=self.toString(data), tags=tags)
 
     def draw_arrow(self, x1, y1, x2, y2):
         # Calculate the angle of the line
@@ -54,7 +57,8 @@ class BinaryTreeVisualizer:
         end_x = x2 - self.node_radius * math.cos(angle)
         end_y = y2 - self.node_radius * math.sin(angle)
         
-        self.canvas.create_line(start_x, start_y, end_x, end_y, arrow=tk.LAST)
+        self.canvas.create_line(start_x, start_y, end_x, end_y, arrow=tk.LAST, tags="tree_elements")
+
 
     
     def clear_message(self):
@@ -160,6 +164,7 @@ class BinaryTreeVisualizer:
         return current
 
     def animate_random_tree(self, app, max_depth):
+        
         def add_nodes(current, depth, is_max_depth_side):
             if depth >= max_depth:
                 return
@@ -200,7 +205,101 @@ class BinaryTreeVisualizer:
         else:
             self.canvas.after(0, create_initial_node)
 
+    def animate_in_order(self, app):
+        if self.binary_tree.root is None:
+            self.show_message("Empty Binary Tree")
+            app.add_log("Add Nodes or generate a Binary Tree in order to use this method.")
+            return
+        nodes=[]
+        def step(current, delay=0):
+            if current is None:
+                
+                return delay
 
+            # Traverse the left subtree first
+            delay = step(current.left, delay)
+
+            # Visit the current node
+            self.canvas.after(delay, lambda: visit_node(current))
+            delay += self.animation_speed  # Increment the delay after visiting
+
+            # Traverse the right subtree
+            delay = step(current.right, delay)
+
+            return delay
+
+        def visit_node(node):
+            nodes.append(node.data)
+            self.draw_tree(highlight_node=node)
+            app.add_log(f"Visited node with data {node.data}")
+            app.add_log(f"Visited Nodes: {nodes}")
+            self.show_message(f"Visited node {node.data}")
+        
+        app.add_log(f"Visited  Nodes: {nodes}")
+
+        # Start the in-order traversal with an initial delay of 0
+        self.canvas.after(0, lambda: step(self.binary_tree.root))
+    def animate_post_order(self, app):
+        if self.binary_tree.root is None:
+            self.show_message("Empty Binary Tree")
+            app.add_log("Add Nodes or generate a Binary Tree in order to use this method.")
+            return
+        nodes=[]
+        def step(current, delay=0):
+            if current is None:
+                return delay
+
+            # Traverse the left subtree first
+            delay = step(current.left, delay)
+
+            # Traverse the right subtree
+            delay = step(current.right, delay)
+
+            # Visit the current node
+            self.canvas.after(delay, lambda: visit_node(current))
+            delay += self.animation_speed  # Increment the delay after visiting
+
+            return delay
+
+        def visit_node(node):
+            nodes.append(node.data)
+            self.draw_tree(highlight_node=node)
+            app.add_log(f"Visited node with data {node.data}")
+            app.add_log(f"Visited Nodes: {nodes}")
+            self.show_message(f"Visited node {node.data}")
+
+        # Start the post-order traversal with an initial delay of 0
+        self.canvas.after(0, lambda: step(self.binary_tree.root))
+
+    def animate_pre_order(self, app):
+        if self.binary_tree.root is None:
+            self.show_message("Empty Binary Tree")
+            app.add_log("Add Nodes or generate a Binary Tree in order to use this method.")
+            return
+        nodes=[]
+        def step(current, delay=0):
+            if current is None:
+                return delay
+
+            self.canvas.after(delay, lambda: visit_node(current))
+            delay += self.animation_speed  # Increment the delay after visiting
+
+
+            delay = step(current.left, delay)
+
+            delay = step(current.right, delay)
+
+            return delay
+
+        def visit_node(node):
+            self.draw_tree(highlight_node=node)
+            nodes.append(node.data)
+            app.add_log(f"Visited node with data {node.data}")
+            app.add_log(f"Visited Nodes: {nodes}")
+            self.show_message(f"Visited node {node.data}")
+
+
+        self.canvas.after(0, lambda: step(self.binary_tree.root))
             
 
     def toString(self, data):
