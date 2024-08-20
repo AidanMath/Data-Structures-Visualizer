@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import random
 import Node, LinkedList, Array, Stack, Queue, BinaryTree, HashTable
-import LinkedListVisualizer, ArrayVisualizer, StackVisualizer, BinaryTreeVisualizer
+import LinkedListVisualizer, ArrayVisualizer, StackVisualizer, BinaryTreeVisualizer, QueueVisualizer
 
 import ast
 
@@ -132,7 +132,7 @@ class DataStructureVisualizer:
         self.methods = {
             "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "Generate"],
             "Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "Generate"],
-            "Queue": ["Add", "Delete", "Insert", "Reverse", "Sort", "Search", "Promote"],
+            "Queue": ["Enqueue", "Dequeue", "Insert", "Reverse", "Sort", "Search", "Promote"],
             "Stack": ["Push", "Pop", "Insert", "Peek", "Reverse", "Sort", "Search", "Generate"],
             "HashTable": ["Add", "Delete", "etc...", "View"],
             "BinaryTree": ["Add", "Delete", "Inorder Traversal", "Preorder Traversal", "Postorder Traversal", "Generate"]
@@ -142,7 +142,7 @@ class DataStructureVisualizer:
         self.method_menu = ttk.Combobox(self.left_frame, textvariable=self.method, state="readonly", width=15, font=("Arial", 12, "bold"))
         self.method_menu.pack(pady=(0,50), padx=20)
 
-        # Sets the Method and updates it accordinghly
+       
 
         
 
@@ -162,6 +162,8 @@ class DataStructureVisualizer:
         self.binary_tree= BinaryTree.BinaryTree()
         self.bt_visualizer = BinaryTreeVisualizer.BinaryTreeVisualizer(self.canvas, self.binary_tree)
 
+        self.queue = Queue.Queue()
+        self.queue_visualizer = QueueVisualizer.QueueVisualizer(self.canvas)
         self.update_methods(self.option.get())
 
         if self.option.get() == None:
@@ -199,7 +201,7 @@ class DataStructureVisualizer:
         method = self.method.get()
         option = self.option.get()
 
-        if method in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push", "Search"]:
+        if method in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push", "Search", "Enqueue"]:
             # Determine label text
             if method == "Generate":
                 if self.display_to_key[option] == "BinaryTree":
@@ -228,7 +230,7 @@ class DataStructureVisualizer:
 
         # Create and pack confirm button for methods that need it
         if method in ["Add", "Insert", "Delete", "Generate", "Delete(Index)", "Binary Search", "Push", "Search", 
-                    "Reverse", "Sort", "Pop", "Peek", "Inorder Traversal", "Preorder Traversal", "Postorder Traversal"]:
+                    "Reverse", "Sort", "Pop", "Peek", "Inorder Traversal", "Preorder Traversal", "Postorder Traversal", "Enqueue", "Dequeue"]:
             self.confirm = tk.Button(self.left_frame, text="Confirm", command=self.execute_method, **BUTTON_STYLE)
             self.confirm.pack(pady=(10, 20), padx=50)
 
@@ -387,9 +389,18 @@ class DataStructureVisualizer:
             
         def binary_tree_preorder():
             self.bt_visualizer.animate_pre_order(self)
-        
-        
 
+        #Queue Methods
+        def queue_enqueue():
+            data = safe_int_conversion(self.data_info_entry.get())
+            if data is not None:
+                self.queue_visualizer.animate_enqueue(self, self.queue, data)
+
+        def queue_dequeue():
+            self.queue_visualizer.animate_dequeue(self, self.queue)
+        
+        def queue_reverse():
+            self.queue_visualizer.animate_reverse(self, self.queue)
 
         # Map structure and method to these regular functions
 
@@ -433,6 +444,12 @@ class DataStructureVisualizer:
                 "Inorder Traversal": binary_tree_inorder,
                 "Postorder Traversal": binary_tree_postorder,
                 "Preorder Traversal": binary_tree_preorder
+            },
+            "Queue": {
+                "Enqueue": queue_enqueue,
+                "Dequeue": queue_dequeue,
+                "Reverse": queue_reverse
+
             }
 
         }
