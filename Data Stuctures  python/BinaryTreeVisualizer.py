@@ -15,6 +15,7 @@ class BinaryTreeVisualizer:
         self.animation_speed = 500  # milliseconds
         
     
+      
         self.start_x = 747
         self.start_y = 50
 
@@ -66,7 +67,7 @@ class BinaryTreeVisualizer:
 
     def show_message(self, text):
         self.clear_message()
-        self.canvas.create_text(10, 10, text=text, anchor="nw", tags="message")
+        self.canvas.create_text(self.canvas.winfo_width()//2 , 780, text=text, tags="message", font=("Arial", 14), anchor= "center")
         
     def animate_add(self, app, data):
         def step(current, parent=None, is_left=None):

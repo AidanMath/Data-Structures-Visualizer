@@ -32,7 +32,7 @@ class ArrayVisualizer:
 
     def show_message(self, text):
         self.clear_message()
-        self.canvas.create_text(self.start_x, self.start_y - 50, text=text, anchor="w", tags="message")
+        self.canvas.create_text(self.start_x, self.start_y - 50, text=text, anchor="w", tags="message", font=("Arial", 14))
 
     def animate_add(self, app, array, data):
         count = 0
@@ -244,16 +244,19 @@ class ArrayVisualizer:
                 self.canvas.after(self.animation_speed, lambda: step(i + 1, 0))
             else:
                 self.draw_array(self.array, highlight_index=j, highlight_index2=j+1)
-                
-                if self.array[j] > self.array[j + 1]:
-                    self.array[j], self.array[j + 1] = self.array[j + 1], self.array[j]
-                    app.add_log(f"Swapped elements at indices {j} and {j+1}.")
-                    self.show_message(f"Swapped elements at indices {j} and {j+1}")
-                else:
-                    app.add_log(f"No swap needed for indices {j} and {j+1}: {self.array[j]} and {self.array[j+1]}")
-                    self.show_message(f"Compared elements at indices {j} and {j+1}")
+                try:
+                    if self.array[j] > self.array[j + 1]:
+                        self.array[j], self.array[j + 1] = self.array[j + 1], self.array[j]
+                        app.add_log(f"Swapped elements at indices {j} and {j+1}.")
+                        self.show_message(f"Swapped elements at indices {j} and {j+1}")
+                    else:
+                        app.add_log(f"No swap needed for indices {j} and {j+1}: {self.array[j]} and {self.array[j+1]}")
+                        self.show_message(f"Compared elements at indices {j} and {j+1}")
 
-                self.canvas.after(self.animation_speed, lambda: step(i, j + 1))
+                    self.canvas.after(self.animation_speed, lambda: step(i, j + 1))
+                except TypeError as e:
+                    self.show_message("Data Type of None found. Cannot sort an array with empty slots")
+                    return
 
         step(0, 0)
 

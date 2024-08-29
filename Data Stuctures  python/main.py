@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import random
 import Node, LinkedList, Array, Stack, Queue, BinaryTree, HashTable
-import LinkedListVisualizer, ArrayVisualizer, StackVisualizer, BinaryTreeVisualizer, QueueVisualizer
+import LinkedListVisualizer, ArrayVisualizer, StackVisualizer, BinaryTreeVisualizer, QueueVisualizer, HashingTableVisualizer
 
 import ast
 
@@ -130,12 +130,11 @@ class DataStructureVisualizer:
         # All Methods associated with their respective data structures
 
         self.methods = {
-            "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "Generate"],
-            "Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "Generate"],
-            "Queue": ["Enqueue", "Dequeue", "Insert", "Reverse", "Sort", "Search", "Promote"],
-            "Stack": ["Push", "Pop", "Insert", "Peek", "Reverse", "Sort", "Search", "Generate"],
-            "HashTable": ["Add", "Delete", "etc...", "View"],
-            "BinaryTree": ["Add", "Delete", "Inorder Traversal", "Preorder Traversal", "Postorder Traversal", "Generate"]
+            "LinkedList": ["Add", "Delete", "Insert", "Reverse", "Sort", "Generate", "Clear"],
+            "Array": ["Add", "Delete", "Delete(Index)", "Insert", "Reverse", "Sort", "Binary Search", "Generate", "Clear"],
+            "Queue": ["Enqueue", "Dequeue", "Insert", "Sort", "Search", "Generate", "Clear"],
+            "HashTable": ["Add", "Delete", "Search","Generate", "Clear"],
+            "BinaryTree": ["Add", "Delete", "Inorder Traversal", "Preorder Traversal", "Postorder Traversal", "Generate", "Clear"]
         }
         
         
@@ -164,6 +163,9 @@ class DataStructureVisualizer:
 
         self.queue = Queue.Queue()
         self.queue_visualizer = QueueVisualizer.QueueVisualizer(self.canvas)
+
+        self.hash_visualizer= HashingTableVisualizer.HashingTableVisualizer(self.canvas, 10)
+
         self.update_methods(self.option.get())
 
         if self.option.get() == None:
@@ -205,7 +207,9 @@ class DataStructureVisualizer:
             # Determine label text
             if method == "Generate":
                 if self.display_to_key[option] == "BinaryTree":
-                    label_text = "Enter Depth(4 or less works best):"
+                    label_text = "Enter Depth <=4:"
+                elif self.display_to_key[option] == "HashTable":
+                    label_text= "Enter Num of Items"
                 else:
                     label_text = "Enter length:"
             elif method == "Delete(Index)":
@@ -399,8 +403,41 @@ class DataStructureVisualizer:
         def queue_dequeue():
             self.queue_visualizer.animate_dequeue(self, self.queue)
         
-        def queue_reverse():
-            self.queue_visualizer.animate_reverse(self, self.queue)
+        def queue_insert():
+            data = safe_int_conversion(self.data_info_entry.get())
+            index =safe_int_conversion(self.index_entry.get())
+            self.queue_visualizer.animate_insert(self, self.queue, data, index)
+        
+        def queue_sort():
+            self.queue_visualizer.animate_sort(self, self.queue)
+        
+        def queue_search():
+            data = safe_int_conversion(self.data_info_entry.get())
+            self.queue_visualizer.animate_search(self, self.queue, data)
+
+        def queue_generate():
+            length = safe_int_conversion(self.data_info_entry.get())
+            self.queue_visualizer.animate_generate(self, self.queue, length)
+        
+        # Hshing table functions
+
+        def hash_insert():
+            key = safe_int_conversion(self.data_info_entry.get())
+            self.hash_visualizer.animate_insert(self, key)
+
+        def hash_search():
+            key = safe_int_conversion(self.data_info_entry.get())
+            self.hash_visualizer.animate_search(self, key)
+        
+        def hash_generate():
+            length= safe_int_conversion(self.data_info_entry.get())
+            self.hash_visualizer.animate_generate(self, length)
+
+        def hash_delete():
+            data = safe_int_conversion(self.data_info_entry.get())
+            self.hash_visualizer.animate_delete(self, data)
+
+        
 
         # Map structure and method to these regular functions
 
@@ -448,7 +485,18 @@ class DataStructureVisualizer:
             "Queue": {
                 "Enqueue": queue_enqueue,
                 "Dequeue": queue_dequeue,
-                "Reverse": queue_reverse
+                "Insert": queue_insert,
+                "Sort": queue_sort,
+                "Search": queue_search,
+                "Generate": queue_generate
+
+
+            },
+            "HashTable": {
+                "Add": hash_insert,
+                "Search": hash_search,
+                "Generate": hash_generate,
+                "Delete": hash_delete
 
             }
 

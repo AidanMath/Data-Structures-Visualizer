@@ -19,7 +19,8 @@ class StackVisualizer:
             x_center, 40,
             text=text,
             anchor="center", 
-            tags="message"
+            tags="message", 
+            font=("Arial", 14)
         )
         self.canvas.update_idletasks()  
 

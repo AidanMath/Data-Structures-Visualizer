@@ -16,7 +16,7 @@ class LinkedListVisualizer:
 
     def show_message(self, text):
         self.clear_message()
-        self.canvas.create_text(self.start_x, self.start_y - 50, text=text, anchor="w", tags="message")
+        self.canvas.create_text(self.start_x, self.start_y - 50, text=text, anchor="w", tags="message", font=("Arial", 14))
 
     def draw_list(self, linked_list, highlight_node=None, highlight_prev=None, highlight_next=None):
         self.canvas.delete("all")

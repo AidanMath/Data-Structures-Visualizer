@@ -18,7 +18,7 @@ class QueueVisualizer:
 
     def show_message(self, text):
         self.clear_message()
-        self.canvas.create_text(self.start_x, self.start_y - 50, text=text, anchor="w", tags="message")
+        self.canvas.create_text(self.start_x, self.start_y - 50, text=text, font=("Arial", 14), anchor="w", tags="message")
 
     def draw_queue(self, queue, highlight_node=None):
         self.canvas.delete("all")
@@ -58,7 +58,7 @@ class QueueVisualizer:
                 queue.rear = new_node
                 queue.length+=1
                 self.draw_queue(queue, highlight_node=queue.front)
-                app.add_log(f"Enqueued {data}. Queue Length: {queue.length}")
+                app.add_log(f"Enqueued {data}. Queue Length: {queue.length}, O(1) operation.")
                 self.show_message(f"Enqueued {data}")
             else:
                 self.draw_queue(queue, highlight_node=current)
@@ -72,7 +72,7 @@ class QueueVisualizer:
             queue.rear = new_node
             queue.length+=1
             self.draw_queue(queue, highlight_node=queue.rear)
-            app.add_log(f"Enqueued {data}. Queue Length: {queue.length}")
+            app.add_log(f"Enqueued {data}. Queue Length: {queue.length}, O(1) operation.")
             self.show_message(f"Enqueued {data}")
 
     def animate_dequeue(self, app, queue):
@@ -92,78 +92,149 @@ class QueueVisualizer:
                 if queue.front is None:
                     queue.rear = None
             queue.length -= 1
-            self.show_message(f"Dequeued {current.data}")
-            self.canvas.after(self.animation_speed, lambda: final_step())
+            self.canvas.after(self.animation_speed, lambda: final_step(current.data))
 
-        def final_step():
+        def final_step(data):
             self.draw_queue(queue)
-            self.show_message("Dequeue complete")
-            app.add_log(f"Queue Length: {queue.length}")
+            self.show_message(f"Dequeued: {data}")
+            app.add_log(f"Queue Length: {queue.length}, O(1) operation")
 
         step(queue.front)
 
-    def animate_reverse(self, app, queue):
-        if not isinstance(queue, Queue):
-            self.show_message("Error: Not a Queue object")
-            app.add_log("The provided object is not a Queue")
-            return
+    def animate_insert(self, app, queue, data, position):
+        new_node = Node.Node(data)
+        if position>queue.length:
+            app.add_log(f"{position} is larger than the length of the Queue")
+            self.show_message(f"{position} is out of range, too large")
+        elif position <0:
+            app.add_log(f"{position} is less than the length of the Queue")
+            self.show_message(f"{position} is out of range, too small")
+        else:
+            def step(current, index):
+                if index == position or current is None:
+                    new_node.next = current
+                    if index == 0:
+                        queue.front = new_node
+                        queue.length += 1
+                        self.draw_queue(queue, highlight_node=new_node)
+                        app.add_log(f"Inserted {data} at Index 0. Queue Length: {queue.length}, O(1) operation.")
+                        self.show_message(f"Inserted {data} at position {position}")
+                        return
+                    else:
+                        prev.next = new_node
+                    if current is None:
+                        queue.rear = new_node
+                        queue.length += 1
+                        self.draw_queue(queue, highlight_node=new_node)
+                        app.add_log(f"Inserted {data} at Index {queue.length}. Queue Length: {queue.length}, O(1) operation.")
+                        self.show_message(f"Inserted {data} at position {position}")
+                        return
+                    queue.length += 1
+                    self.draw_queue(queue, highlight_node=new_node)
+                    app.add_log(f"Inserted {data} at position {position}. Queue Length: {queue.length}, O(n) operation.")
+                    self.show_message(f"Inserted {data} at position {position}")
+                else:
+                    self.draw_queue(queue, highlight_node=current)
+                    self.show_message(f"Traversing to Index: {position}")
+                    self.canvas.after(self.animation_speed, lambda: step(current.next, index + 1))
 
-        def reverse_step(nodes, prev_index, current_index):
-            if current_index >= len(nodes):
-                queue.front = nodes[prev_index] if prev_index >= 0 else None
-                queue.rear = nodes[0] if nodes else None
+            if position == 0:
+                step(queue.front, 0)
+            else:
+                prev = queue.front
+                for _ in range(position - 1):
+                    if prev.next is None:
+                        break
+                    prev = prev.next
+                step(prev.next, position)
+
+    def animate_sort(self, app, queue):
+
+        def bubble_sort_step(swapped):
+            if not swapped:
                 self.draw_queue(queue)
-                self.show_message("Reversed")
-                app.add_log("Queue reversed. O(n) operation time.")
+                self.show_message("Queue is sorted")
+                app.add_log("Queue sorted, O(n^2) operation")
                 return
 
-            current = nodes[current_index]
-            prev = nodes[prev_index] if prev_index >= 0 else None
-            next_index = current_index + 1
-            next_node = nodes[next_index] if next_index < len(nodes) else None
+            current = queue.front
+            swapped = False
+            while current and current.next:
+                if current.data > current.next.data:
+                    temp = current.data
+                    current.data = current.next.data
+                    current.next.data = temp
+                    swapped = True
+                    self.draw_queue(queue, highlight_node=current)
+                    self.show_message(f"Swapped {current.data} and {current.next.data}")
+                    self.canvas.after(self.animation_speed, lambda: bubble_sort_step(swapped))
+                    return
+                current = current.next
 
-            # Create a temporary queue to visualize the current state
-            temp_queue = Queue()
-            for node in nodes:
-                # Manually enqueue nodes into temp_queue
-                new_node = Node.Node(node.data)
-                if temp_queue.rear:
-                    temp_queue.rear.next = new_node
-                else:
-                    temp_queue.front = new_node
-                temp_queue.rear = new_node
-                temp_queue.length += 1
+            self.canvas.after(self.animation_speed, lambda: bubble_sort_step(swapped))
 
-            # Visualize the current step
-            self.canvas.after(self.animation_speed, draw_state(temp_queue, current))
-            self.draw_queue(temp_queue, highlight_node=current)
-            self.show_message("Reversing")
-            
-            # Reverse the connection
-            if prev_index >= 0:
-                nodes[current_index].next = nodes[prev_index]
-            else:
-                nodes[current_index].next = None
+        bubble_sort_step(True)
 
-            # Schedule the next step
-            self.canvas.after(self.animation_speed, lambda: reverse_step(nodes, current_index, next_index))
-        
-        def draw_state(temp_queue, current):
-             self.draw_queue(temp_queue, highlight_node=current)
-
-        # Convert the queue to a list of nodes for easier manipulation
-        nodes = []
-        current = queue.front
-        while current:
-            nodes.append(current)
-            current = current.next
-
-        if nodes:
-            reverse_step(nodes, -1, 0)
+    def animate_search(self, app, queue, target):
+        front=queue.front
+        back=queue.rear
+        if front.data== target:
+            self.draw_queue(queue, front)
+            self.show_message(f"{target} Found at the front")
+            app.add_log(f"{target} Is front of the queue, O(1) operation")
+        elif back.data==target:
+            self.draw_queue(queue, back)
+            self.show_message(f"{target} Found at the back")
+            app.add_log(f"{target} Is the rear of the queue, O(1) operation")
         else:
-            self.draw_queue(queue)
-            self.show_message("Queue is empty")
-            app.add_log(f"Queue Length is {queue.length}")
+            def step(current, index):
+                if current is None:
+                    self.draw_queue(queue)
+                    self.show_message(f"{target} not found in the queue")
+                    app.add_log(f"{target} not found in the queue")
+                elif current.data == target:
+                    self.draw_queue(queue, highlight_node=current)
+                    self.show_message(f"Found {target} within the queue")
+                    app.add_log(f"Found {target} at position {index}, O(n) operation.")
+                else:
+                    self.draw_queue(queue, highlight_node=current)
+                    self.show_message(f"Searching for {target}...")
+                    self.canvas.after(self.animation_speed, lambda: step(current.next, index + 1))
 
+            step(queue.front, 0)
+        
+    def animate_generate(self, app, queue, length):
+        def generate_step(count):
+            if count < length:
+                data = random.randint(0, 100)
+                new_node = Node.Node(data)
+                
+                if queue.front is None:
+                    queue.front = new_node
+                    queue.rear = new_node
+                else:
+                    queue.rear.next = new_node
+                    queue.rear = new_node
+                
+                queue.length += 1
+                
+                self.draw_queue(queue, highlight_node=queue.rear)
+                self.show_message(f"Generated {data}")
+                app.add_log(f"Generated {data}. Queue Length: {queue.length}")
+                self.canvas.after(self.animation_speed, lambda: generate_step(count + 1))
+            else:
+                self.draw_queue(queue)
+                self.show_message(f"Generated queue with {length} elements")
+                app.add_log(f"Generated queue with {length} elements, O(n) operation.")
+
+        # Clear the existing queue
+        if queue.front:
+            queue.front=None
+            queue.length=0
+            
+
+        generate_step(0)
+
+    
     def toString(self, data):
         return str(data)
